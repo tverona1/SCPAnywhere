@@ -222,23 +222,7 @@ class OfflineDataRepositoryImpl constructor(
      */
     private suspend fun loadZipFiles(assets: Array<LocalAssetMetadata>): ZipResourceFile =
         withContext(Dispatchers.IO) {
-            val zipResourceFile = ZipResourceFile()
-            runBlocking {
-                for (asset in assets) {
-                    launch {
-                        try {
-                            withContext(Dispatchers.IO) {
-                                logi("Adding file: ${asset.name} - ${asset.path}")
-                                zipResourceFile.addFile(asset.path)
-                            }
-                        } catch (e: Exception) {
-                            loge("Failed to load file ${asset.name} - ${asset.path}", e)
-                        }
-                    }
-                }
-            }
-
-            logi("Done adding files")
+            val zipResourceFile = ZipResourceFile(ProcessLifecycleOwner.get().lifecycle.coroutineScope, assets.map { it.path })
             return@withContext zipResourceFile
         }
 }

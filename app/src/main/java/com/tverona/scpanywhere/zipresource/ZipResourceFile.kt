@@ -2,15 +2,20 @@ package com.tverona.scpanywhere.zipresource
 
 import android.content.res.AssetFileDescriptor
 import android.os.ParcelFileDescriptor
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.tverona.scpanywhere.utils.loge
 import com.tverona.scpanywhere.utils.logi
 import com.tverona.scpanywhere.utils.logv
 import com.tverona.scpanywhere.utils.logw
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import java.util.zip.ZipFile
 import kotlin.concurrent.withLock
@@ -18,7 +23,10 @@ import kotlin.concurrent.withLock
 /**
  * Wraps zip file(s) and exposes input streams from contained files
  */
-class ZipResourceFile {
+class ZipResourceFile(
+    private val lifecycleCoroutineScope: LifecycleCoroutineScope,
+    zipFileNames: List<String>
+) {
     class ZipEntryRO(
         val zipFile: File
     ) {
@@ -92,6 +100,7 @@ class ZipResourceFile {
     private val mHashMap =
         HashMap<String, ZipEntryRO>()
 
+    private var finishedIndexing = AtomicBoolean(false)
     private val mLock = ReentrantLock()
 
     /* for reading compressed files */
@@ -110,21 +119,20 @@ class ZipResourceFile {
     @Throws(IOException::class)
     fun getInputStream(assetPath: String): InputStream? {
         try {
-            val entry =
-                mHashMap[assetPath]
-            if (null != entry) {
-                if (entry.isUncompressed) {
-                    return entry.assetFileDescriptor!!.createInputStream()
-                } else {
-                    var zf = mZipFiles[entry.zipFile]
-                    /** read compressed files  */
-                    if (null == zf) {
-                        logi("Opening file ${entry.zipFile.path}")
-                        zf = ZipFile(entry.zipFile, ZipFile.OPEN_READ)
-                        mZipFiles[entry.zipFile] = zf
+            if (!finishedIndexing.get()) {
+                // We haven't finished indexing yet, so get it from slower path
+                return getInputSteamUnindexed(assetPath)
+            } else {
+                val entry =
+                    mHashMap[assetPath]
+                if (null != entry) {
+                    if (entry.isUncompressed) {
+                        return entry.assetFileDescriptor!!.createInputStream()
+                    } else {
+                        var zf = mZipFiles[entry.zipFile]
+                        val zi = zf?.getEntry(assetPath)
+                        if (null != zi) return zf?.getInputStream(zi)
                     }
-                    val zi = zf.getEntry(assetPath)
-                    if (null != zi) return zf.getInputStream(zi)
                 }
             }
         } catch (e: Exception) {
@@ -137,10 +145,23 @@ class ZipResourceFile {
         return mHashMap.size
     }
 
-    // private var mLEByteBuffer = ByteBuffer.allocate(4)
+    /**
+     * Get input stream for asset [assetPath] while we're not yet indexed (by enumerating zip files)
+     */
+    private fun getInputSteamUnindexed(assetPath: String): InputStream? {
+        for (zipFile in mZipFiles) {
+            val zi = zipFile.value.getEntry(assetPath)
+            if (null != zi) return zipFile.value.getInputStream(zi)
+        }
+        return null
+    }
 
+    /**
+     * Index the file entries. Opens the specified file read-only, memory-map the entire thing and
+     * close the file before returning.
+     */
     @Throws(IOException::class)
-    private fun readFileEntries(file: File) {
+    private fun indexFileEntries(file: File) {
         RandomAccessFile(file, "r").use {
             val fileLength = it.length()
             if (fileLength < kEOCDLen) {
@@ -196,7 +217,7 @@ class ZipResourceFile {
             while (eocdIdx >= 0) {
                 if (buffer[eocdIdx] == 0x50.toByte() && bbuf.getInt(eocdIdx) == kEOCDSignature) {
                     logv(
-                        "+++ Found EOCD at index: $eocdIdx"
+                        "+++ Found EOCD at index: $eocdIdx for file ${file.name}"
                     )
                     break
                 }
@@ -222,8 +243,7 @@ class ZipResourceFile {
             // Verify that they look reasonable.
             if (dirOffset + dirSize > fileLength) {
                 logw(
-                    "bad offsets (dir " + dirOffset + ", size " + dirSize + ", eocd "
-                            + eocdIdx + ")"
+                    "bad offsets (dir $dirOffset, size $dirSize, eocd $eocdIdx)"
                 )
                 throw IOException()
             }
@@ -234,8 +254,7 @@ class ZipResourceFile {
                 throw IOException()
             }
             logv(
-                "+++ numEntries=" + numEntries + " dirSize=" + dirSize + " dirOffset="
-                        + dirOffset
+                "+++ numEntries=$numEntries dirSize=$dirSize dirOffset=$dirOffset for file ${file.name}"
             )
             val directoryMap = it.channel
                 .map(FileChannel.MapMode.READ_ONLY, dirOffset, dirSize)
@@ -313,19 +332,29 @@ class ZipResourceFile {
             }
 
             logv(
-                "+++ zip good scan $numEntries entries"
+                "+++ zip good scan $numEntries entries for file ${file.name}"
             )
         }
     }
 
-    /*
-     * Opens the specified file read-only. We memory-map the entire thing and
-     * close the file before returning.
+    /**
+     * Indexes files async.
      */
-    @Throws(IOException::class)
-    fun addFile(zipFileName: String) {
-        // Read the file entries
-        readFileEntries(File(zipFileName))
+    private suspend fun indexFilesAsync(zipFileNames: List<String>) {
+        withContext(Dispatchers.IO) {
+            for (fileName in zipFileNames) {
+                launch {
+                    try {
+                        indexFileEntries(File(fileName))
+                    } catch (e: Exception) {
+                        loge("Error indexing file: $fileName", e)
+                    }
+                }
+            }
+        }
+
+        logv("Finished processing zip files")
+        finishedIndexing.set(true)
     }
 
     fun close() {
@@ -334,6 +363,26 @@ class ZipResourceFile {
         }
         mZipFiles.clear()
         mHashMap.clear()
+        finishedIndexing.set(false)
+    }
+
+    init {
+        for (fileName in zipFileNames) {
+            try {
+                logi("Opening zip file $fileName")
+                val file = File(fileName)
+                val zf = ZipFile(file, ZipFile.OPEN_READ)
+                mZipFiles[file] = zf
+                logi("Added zip file $fileName")
+            } catch (e: Exception) {
+                loge("Error processing file: $fileName", e)
+            }
+        }
+
+        // Asynchronously index files
+        lifecycleCoroutineScope.launch {
+            indexFilesAsync(zipFileNames)
+        }
     }
 
     companion object {
