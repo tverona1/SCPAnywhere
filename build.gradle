@@ -1,0 +1,56 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    ext.kotlin_version = "1.4.10"
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:4.1.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.dagger:hilt-android-gradle-plugin:2.28-alpha'
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+plugins {
+    id "com.moowork.node" version "1.3.1"
+}
+
+node {
+    nodeModulesDir = file("${project.projectDir}/scraper")
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+task scrapeSite(type: NodeTask) {
+    script = file('scraper/main.js')
+    args = ["main",
+            "--output", "${projectDir}/scraper/output"
+    ]
+    options = ["--max-old-space-size=8000"]
+}
+
+task postProcess(type: NodeTask) {
+    script = file('scraper/main.js')
+    args = ["postprocess",
+            "--input", "${projectDir}/scraper/output"]
+}
+
+task generateObb(type: NodeTask) {
+    script = file('scraper/main.js')
+    args = ["generate",
+            "--input", "${projectDir}/scraper/output",
+            "--output", "${projectDir}/scraper/output_zipped"
+    ]
+}

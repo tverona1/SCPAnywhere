@@ -1,0 +1,103 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        app:title="@string/style_category">
+
+        <com.tverona.scpanywhere.ui.NumberPickerPreference
+            android:dialogTitle="Font Size"
+            android:key="@string/font_size_key"
+            android:title="@string/font_size"
+        />
+
+        <ListPreference
+            app:defaultValue="@string/font_default"
+            app:entries="@array/font_entries"
+            app:entryValues="@array/font_values"
+            app:key="@string/font_key"
+            app:title="@string/font"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="@string/theme_default"
+            app:entries="@array/style_entries"
+            app:entryValues="@array/style_values"
+            app:key="@string/theme_key"
+            app:title="@string/theme"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/connectivity_data_category">
+
+        <SwitchPreference
+            app:title="@string/offline_mode"
+            app:key="@string/offline_mode_key"
+            app:summaryOff="@string/offline_mode_disabled"
+            app:summaryOn="@string/offline_mode_enabled" />
+
+        <ListPreference
+            app:key="@string/storage_key"
+            app:title="@string/storage_location"
+            app:persistent="false"
+            app:useSimpleSummaryProvider="true" />
+
+        <Preference
+            android:title="@string/download_data"
+            android:key="@string/download_data_key"
+            android:summary="@string/download_data_description"
+            />
+
+        <Preference
+            android:title="@string/offline_data"
+            android:key="@string/offline_data_key"
+            android:summary="@string/offline_data_description"
+            />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/speech_category">
+
+        <ListPreference
+            app:key="@string/speech_engine_key"
+            app:title="@string/speech_engine"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:key="@string/voice_key"
+            app:title="@string/voice"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:key="@string/pitch_key"
+            app:defaultValue="1.0"
+            app:title="@string/pitch"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:key="@string/speech_rate_key"
+            app:defaultValue="1.0"
+            app:title="@string/speech_rate"
+            app:useSimpleSummaryProvider="true" />
+
+        <Preference
+            android:title="@string/system_speech_settings"
+            android:key="@string/system_speech_settings_key"
+            android:summary="@string/system_speech_settings_description"
+            />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/import_export_category">
+        <Preference
+            android:title="@string/export_data"
+            android:key="@string/export_data_key"
+            android:summary="@string/export_data_description"
+            />
+
+        <Preference
+            android:title="@string/import_data"
+            android:key="@string/import_data_key"
+            android:summary="@string/import_data_description"
+            />
+    </PreferenceCategory>
+</PreferenceScreen>

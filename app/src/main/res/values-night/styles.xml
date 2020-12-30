@@ -1,0 +1,105 @@
+<resources>
+    <!-- List of available app themes -->
+    <style name="AppTheme.SCP" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorSCP</item>
+        <item name="colorSecondary">@color/secondaryLightColorSCP</item>
+    </style>
+
+    <style name="AppTheme.Red" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorRed</item>
+        <item name="colorSecondary">@color/secondaryDarkColorRed</item>
+    </style>
+
+    <style name="AppTheme.Pink" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorPink</item>
+        <item name="colorSecondary">@color/secondaryDarkColorPink</item>
+    </style>
+
+    <style name="AppTheme.Purple" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorPurple</item>
+        <item name="colorSecondary">@color/secondaryDarkColorPurple</item>
+    </style>
+
+    <style name="AppTheme.DeepPurple" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorDeepPurple</item>
+        <item name="colorSecondary">@color/secondaryDarkColorDeepPurple</item>
+    </style>
+
+    <style name="AppTheme.Indigo" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorIndigo</item>
+        <item name="colorSecondary">@color/secondaryDarkColorIndigo</item>
+    </style>
+
+    <style name="AppTheme.Blue" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryColorLightBlue</item>
+        <item name="colorSecondary">@color/secondaryDarkColorBlue</item>
+    </style>
+
+    <style name="AppTheme.LightBlue" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorLightBlue</item>
+        <item name="colorSecondary">@color/secondaryDarkColorLightBlue</item>
+    </style>
+
+    <style name="AppTheme.Cyan" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorCyan</item>
+        <item name="colorSecondary">@color/secondaryDarkColorCyan</item>
+    </style>
+
+    <style name="AppTheme.Teal" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorTeal</item>
+        <item name="colorSecondary">@color/secondaryDarkColorTeal</item>
+    </style>
+
+    <style name="AppTheme.Green" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorGreen</item>
+        <item name="colorSecondary">@color/secondaryDarkColorGreen</item>
+    </style>
+
+    <style name="AppTheme.LightGreen" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorLightGreen</item>
+        <item name="colorSecondary">@color/secondaryDarkColorLightGreen</item>
+    </style>
+
+    <style name="AppTheme.Lime" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorLime</item>
+        <item name="colorSecondary">@color/secondaryDarkColorLime</item>
+    </style>
+
+    <style name="AppTheme.Yellow" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorYellow</item>
+        <item name="colorSecondary">@color/secondaryDarkColorYellow</item>
+    </style>
+
+    <style name="AppTheme.Amber" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorAmber</item>
+        <item name="colorSecondary">@color/secondaryDarkColorAmber</item>
+    </style>
+
+    <style name="AppTheme.Orange" parent="AppTheme.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/primaryDarkColorOrange</item>
+        <item name="colorSecondary">@color/secondaryDarkColorOrange</item>
+    </style>
+
+    <style name="AppTheme.DeepOrange" parent="AppTheme.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/primaryDarkColorDeepOrange</item>
+        <item name="colorSecondary">@color/secondaryDarkColorDeepOrange</item>
+    </style>
+
+    <style name="AppTheme.Brown" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorBrown</item>
+        <item name="colorSecondary">@color/secondaryDarkColorBrown</item>
+    </style>
+
+    <style name="AppTheme.Gray" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorGray</item>
+        <item name="colorSecondary">@color/secondaryDarkColorGray</item>
+    </style>
+
+    <style name="AppTheme.BlueGray" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorBlueGray</item>
+        <item name="colorSecondary">@color/secondaryDarkColorBlueGray</item>
+    </style>
+
+</resources>

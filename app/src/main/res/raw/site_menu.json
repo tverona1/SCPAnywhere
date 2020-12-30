@@ -1,0 +1,112 @@
+[
+  {
+    "heading": "SCP Series",
+    "source": "$scp_series"
+  },
+  {
+    "items": [
+    	{
+    		"heading": "Tales",
+		    "source": "$tales_series",
+			"items": [
+			{
+				"name": "Foundation Tales",
+				"url": "www.scpwiki.com/foundation-tales/index.html"
+			},
+			{
+				"name": "Series Archive",
+				"url": "www.scpwiki.com/series-archive/index.html"
+			},
+			{
+				"name": "Incident Reports",
+				"url": "www.scpwiki.com/incident-reports-eye-witness-interviews-and-personal-logs/index.html"
+			},
+			{
+				"name": "CreepyPasta Archive",
+				"url": "www.scpwiki.com/creepy-pasta/index.html"
+			}
+			]
+		}, {
+			"heading": "Library",
+			"items": [
+				{
+				"name": "User-Curated Lists",
+				"url": "www.scpwiki.com/user-curated-lists/index.html"
+				},
+				{
+				"name": "Joke SCPs",
+				"url": "www.scpwiki.com/joke-scps/index.html"
+				},
+				{
+				"name": "Joke SCPs Tales",
+				"url": "www.scpwiki.com/joke-scps-tales-edition/index.html"
+				},
+				{
+				"name": "Explained SCPs",
+				"url": "www.scpwiki.com/scp-ex/index.html"
+				},
+				{
+				"name": "Explained SCPs Tales",
+				"url": "www.scpwiki.com/explained-scps-tales-edition/index.html"
+				},
+				{
+				"name": "GoI Formats",
+				"url": "www.scpwiki.com/goi-formats/index.html"
+				}
+			]
+		}, {
+		    "heading": "Universe",
+		    "items": [
+		      {
+		        "name": "Canons",
+		        "url": "www.scpwiki.com/canon-hub/index.html"
+		      },
+		      {
+		        "name": "Groups of Interest",
+		        "url": "www.scpwiki.com/groups-of-interest/index.html"
+		      },
+		      {
+		        "name": "Anomalous Items",
+		        "url": "www.scpwiki.com/log-of-anomalous-items/index.html"
+		      },
+		      {
+		        "name": "Extranormal Events",
+		        "url": "www.scpwiki.com/log-of-extranormal-events/index.html"
+		      },
+		      {
+		        "name": "Unexplained Locations",
+		        "url": "www.scpwiki.com/log-of-unexplained-locations/index.html"
+		      }
+		    ]
+		},{
+		    "heading": "Background",
+		    "items": [
+		      {
+		        "name": "About the Foundation",
+		        "url": "www.scpwiki.com/about-the-scp-foundation/index.html"
+		      },
+		      {
+		        "name": "Object Classes",
+		        "url": "www.scpwiki.com/object-classes/index.html"
+		      },
+		      {
+		        "name": "Personnel Dossier",
+		        "url": "www.scpwiki.com/personnel-and-character-dossier/index.html"
+		      },
+		      {
+		        "name": "Security & Clearance",
+		        "url": "www.scpwiki.com/security-clearance-levels/index.html"
+		      },
+		      {
+		        "name": "Secure Facilities",
+		        "url": "www.scpwiki.com/secure-facilities-locations/index.html"
+		      },
+		      {
+		        "name": "Task Forces",
+		        "url": "www.scpwiki.com/task-forces/index.html"
+		      }
+		    ]
+		}
+	]
+  }
+]

@@ -1,0 +1,53 @@
+@font-face {
+     font-family: "${font-name}";
+     src: url("/scpanywhere_assets/fonts/${font-name}-Regular.ttf");
+     font-weight: normal;
+     font-style: normal;
+}
+
+@font-face {
+    font-family: "${font-name}";
+    src: url("/scpanywhere_assets/fonts/${font-name}-Bold.ttf");
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "${font-name}";
+    src: url("/scpanywhere_assets/fonts/${font-name}-Italic.ttf");
+    font-weight: normal;
+    font-style: italic;
+}
+
+body {
+    font-family: "${font-name}";
+    line-height: 1.4;
+}
+
+/* From https://google.github.io/material-design-icons */
+@font-face {
+    font-family: "Material Icons";
+    font-style: normal;
+    font-weight: normal;
+    src: url("/scpanywhere_assets/fonts/fonts/MaterialIcons-Regular.ttf");
+}
+
+.material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 85%;
+    word-wrap: normal;
+    white-space: nowrap;
+    display: inline-block;
+    direction: ltr;
+
+    /* Support for all WebKit browsers. */
+    -webkit-font-smoothing: antialiased;
+
+    /* Support for Safari and Chrome. */
+    text-rendering: optimizeLegibility;
+
+    /* Support for Firefox. */
+    -moz-osx-font-smoothing: grayscale;
+}

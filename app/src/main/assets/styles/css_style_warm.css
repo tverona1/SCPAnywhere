@@ -1,0 +1,252 @@
+/* Tag Level Overrides */
+:root {
+  --color-override: #000 !important;
+  --color-secondary-override: #171717 !important;
+  --color-link-override: #d90000 !important;
+  --color-visited-override: #ba7272 !important;
+  --background-color-override: #fff3cd !important;
+  --background-color-secondary-override: #ffedbf !important;
+}
+
+body, div {
+    color: var(--color-override) !important;
+    background-color: var(--background-color-override) !important;
+}
+
+p {
+    color: var(--color-override) !important;
+}
+
+a {
+    color: var(--color-link-override);
+}
+
+a:visited {
+    color: var(--color-visited-override);
+}
+
+blockquote {
+    border: 1px dashed var(--color-override) !important;
+    background-color: var(--background-color-secondary-override) !important;
+}
+
+hr {
+    background-color: var(--color-override) !important;
+}
+
+select {
+    color: var(--color-override) !important;
+    background-color: var(--background-color-override) !important;
+    border: 1px solid var(--color-override) !important;
+}
+
+input {
+    color: var(--color-override);
+    background-color: var(--background-color-override);
+    border: 1px solid var(--color-override) !important;
+}
+
+div#container-wrap {
+    background-color: var(--background-color-override) !important;
+    background: url()
+}
+
+#header h1 a {
+    color: var(--color-override) !important;
+}
+
+#header h2 span {
+    color: var(--color-override) !important;
+}
+
+h1,
+#page-title {
+    color: var(--color-override) !important;
+}
+
+#page-title {
+    border-bottom: 1px solid var(--color-override) !important;
+}
+
+#toc {
+    background-color: var(--background-color-override) !important;
+    border: 1px dashed var(--color-override) !important;
+}
+
+#footer {
+    background: var(--background-color-override) !important;
+    color: var(--color-override) !important;
+}
+
+#footer a {
+    color: var(--color-secondary-override) !important;
+}
+
+#license-area {
+    color: var(--color-override) !important;
+}
+
+/* Class Level Overrides */
+.scp-image-block {
+    border: solid 1px var(--color-override) !important;
+}
+
+.scp-image-block .scp-image-caption {
+    background-color: var(--background-color-secondary-override) !important;
+    border-top: solid 1px var(--color-override) !important;
+}
+
+.content-panel {
+    background-color: var(--background-color-override) !important;
+    box-shadow: none !important;
+    border: solid 1px var(--color-override) !important;
+}
+
+.content-panel .content-type-title {
+    background-color: var(--background-color-override) !important;
+    box-shadow: none !important;
+}
+
+.content-panel.standalone {
+    background-color: var(--background-color-override) !important;
+    background: none !important;
+}
+
+.content-panel .content-toc {
+    background-color: var(--background-color-override) !important;
+    border: solid 1px var(--color-override) !important;
+}
+
+.content-panel .panel-body {
+    background: none !important;
+}
+
+.content-panel .panel-footer a {
+    color: var(--color-secondary-override) !important;
+}
+
+/* collapsibles */
+.collapsible-block-folded, .collapsible-block-unfolded-link {
+    background-color: var(--background-color-secondary-override) !important;
+}
+
+.pager .current {
+    background-color: var(--background-color-override) !important;
+    color: var(--color-override) !important;
+    border: 1px solid var(--color-override) !important;
+}
+
+.pager a {
+    border: 1px solid var(--color-secondary-override) !important;
+}
+
+.page-tags span {
+    border-top: 1px solid var(--color-override) !important;
+}
+
+table.wiki-content-table th {
+    background-color: var(--background-color-secondary-override) !important;
+    border: 1px solid var(--color-override) !important;
+    color: var(--color-override) !important;
+}
+
+table.wiki-content-table td {
+    border: 1px solid var(--color-override) !important;
+}
+
+/* Heritage Collection */
+
+.heritage-rating-module {
+    background-color: var(--background-color-override) !important;
+}
+
+/* Rating block */
+.rate-box-with-credit-button {
+    background-color: var(--background-color-override) !important;
+    color: var(--color-override) !important;
+}
+
+.page-rate-widget-box .rate-points {
+    background-color: var(--background-color-override) !important;
+    border: solid 1px var(--color-override) !important;
+    color: var(--color-override) !important;
+}
+
+.page-rate-widget-box .rateup,
+.page-rate-widget-box .ratedown,
+.page-rate-widget-box .cancel {
+    background-color: var(--background-color-override) !important;
+    border: solid 1px var(--color-override) !important;
+    font-weight: bold !important;
+}
+
+.page-rate-widget-box .rateup a,
+.page-rate-widget-box .ratedown a,
+.page-rate-widget-box .cancel a {
+    color: var(--color-override) !important;
+}
+
+.page-rate-widget-box .rateup a:hover,
+.page-rate-widget-box .ratedown a:hover,
+.page-rate-widget-box .cancel a:hover {
+    background: var(--background-color-override) !important;
+    color: var(--color-secondary-override) !important;
+    text-decoration: underline !important;
+}
+
+/* YUI Overrides */
+.yui-navset .yui-nav {
+    border-color: var(--color-override) !important;
+}
+
+.yui-navset .yui-nav a,
+.yui-navset .yui-navset-top .yui-nav a {
+    background-color: var(--background-color-override) !important;
+    color: var(--color-secondary-override) !important;
+    border: 1px solid var(--color-secondary-override) !important;
+    border-bottom: 0 !important;
+    background-image: url() !important;
+}
+
+.yui-navset .yui-nav a:hover,
+.yui-navset .yui-nav a:focus {
+    background: var(--background-color-override) url() !important;
+    text-decoration: none !important;
+}
+
+.yui-navset .yui-content {
+    background-color: var(--background-color-override) !important;
+    border: 1px solid var(--color-override) !important;
+}
+
+.yui-navset .yui-nav .selected a,
+.yui-navset .yui-nav .selected a:focus,
+.yui-navset .yui-nav .selected a:hover,
+.yui-navset .yui-nav .selected a em {
+    background: var(--background-color-override) !important;
+    color: var(--color-override) !important;
+    border-color: var(--color-override) !important;
+}
+
+/* Modal Window */
+
+.owindow {
+    background-color: var(--background-color-override) !important;
+    border: 1px solid var(--color-override) !important;
+}
+
+.owindow .title {
+    background-color: var(--background-color-override) !important;
+}
+
+.owindow .button-bar a {
+    background-color: var(--background-color-override) !important;
+    color: var(--color-secondary-override) !important;
+    border: 1px solid var(--color-secondary-override) !important;
+}
+
+.owindow .button-bar a:hover {
+    background-color: var(--background-color-override) !important;
+    color: var(--color-secondary-override) !important;
+    text-decoration: underline !important;
+}

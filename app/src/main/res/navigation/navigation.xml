@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.tverona.scpanywhere.ui.WebViewFragment"
+        android:label="@string/menu_home"
+        tools:layout="@layout/fragment_webview" />
+
+    <fragment
+        android:id="@+id/nav_settings"
+        android:label="@string/settings"
+        android:name="com.tverona.scpanywhere.ui.SettingsFragment" />
+
+    <fragment
+        android:id="@+id/item_list"
+        android:label="{title}"
+        android:name="com.tverona.scpanywhere.ui.ListItemFragment">
+        <argument
+            android:name="title"
+            app:argType="string"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/read_list"
+        android:label="@string/read"
+        android:name="com.tverona.scpanywhere.ui.ReadItemFragment">
+    </fragment>
+
+    <fragment
+        android:id="@+id/favorites_list"
+        android:label="@string/favorites"
+        android:name="com.tverona.scpanywhere.ui.FavoriteItemFragment">
+    </fragment>
+
+    <fragment
+        android:id="@+id/search_scp_list"
+        android:label="@string/search_scp_list"
+        android:name="com.tverona.scpanywhere.ui.SearchFragment">
+        <argument
+            android:name="@string/is_scp_search"
+            app:argType="boolean"
+            android:defaultValue="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/search_tale_list"
+        android:label="@string/search_tale_list"
+        android:name="com.tverona.scpanywhere.ui.SearchFragment">
+        <argument
+            android:name="@string/is_scp_search"
+            app:argType="boolean"
+            android:defaultValue="false" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/scpitem_list"
+        android:label="{title}"
+        android:name="com.tverona.scpanywhere.ui.ScpListItemFragment">
+        <argument
+            android:name="title"
+            app:argType="string"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/downloader"
+        android:label="@string/download_data"
+        android:name="com.tverona.scpanywhere.ui.DownloadFragment"
+        tools:layout="@layout/fragment_downloader" />
+
+    <fragment
+        android:id="@+id/local_assets"
+        android:label="@string/offline_data"
+        android:name="com.tverona.scpanywhere.ui.LocalFragment"
+        tools:layout="@layout/fragment_localassets" />
+
+    <fragment
+        android:id="@+id/stats"
+        android:label="@string/stats"
+        android:name="com.tverona.scpanywhere.ui.StatsFragment"
+        tools:layout="@layout/fragment_stats" />
+
+    <!--Global action-->
+    <action android:id="@+id/action_settings"
+        app:destination="@id/nav_settings"/>
+
+</navigation>

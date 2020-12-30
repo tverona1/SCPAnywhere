@@ -1,0 +1,32 @@
+{
+  "name": "scraper",
+  "version": "1.0.0",
+  "description": "Scrapes SCP site and makes an offline copy",
+  "main": "scrape.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tverona1/SCPAnywhere/scraper"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^0.22.0",
+    "css-url-parser": "^1.1.3",
+    "file-type": "^15.0.0",
+    "got": "^11.6.2",
+    "he": "^1.2.0",
+    "log4js": "^6.3.0",
+    "mime-types": "^2.1.27",
+    "piscina": "^1.6.3",
+    "website-scraper": "github:tverona1/node-website-scraper#master",
+    "why-is-node-running": "^2.2.0",
+    "yargs": "^15.4.1"
+  },
+  "devDependencies": {
+    "grunt": "~1.2.1"
+  }
+}

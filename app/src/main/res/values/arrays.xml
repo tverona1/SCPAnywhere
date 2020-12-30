@@ -1,0 +1,91 @@
+<resources>
+    <!-- Style entries / values -->
+    <string-array name="style_entries">
+        <item>Light (Default)</item>
+        <item>Dark</item>
+        <item>Warm</item>
+        <item>Night</item>
+        <item>Navy</item>
+        <item>E-book</item>
+    </string-array>
+
+    <string-array name="style_values">
+        <item>styles/css_style_light.css</item>
+        <item>styles/css_style_dark.css</item>
+        <item>styles/css_style_warm.css</item>
+        <item>styles/css_style_night.css</item>
+        <item>styles/css_style_navy.css</item>
+        <item>styles/css_style_ebook.css</item>
+    </string-array>
+
+    <!-- Style to app theme mapping: Each entry above corresponds to the below app theme -->
+    <integer-array name="style_to_app_theme">
+        <item>@integer/AppTheme.SCP</item>
+        <item>@integer/AppTheme.SCP</item>
+        <item>@integer/AppTheme.Amber</item>
+        <item>@integer/AppTheme.BlueGray</item>
+        <item>@integer/AppTheme.Blue</item>
+        <item>@integer/AppTheme.Gray</item>
+    </integer-array>
+
+    <!-- Style to light / dark app theme mapping: Each entry above corresponds to either light or dark app theme -->
+    <integer-array name="style_to_light_vs_darK_theme">
+        <item>0</item>
+        <item>1</item>
+        <item>0</item>
+        <item>1</item>
+        <item>1</item>
+        <item>0</item>
+    </integer-array>
+
+    <!-- Font size entries / values -->
+    <string-array name="font_size_entries">
+        <item>80%</item>
+        <item>90%</item>
+        <item>100%</item>
+        <item>110%</item>
+        <item>120%</item>
+        <item>140%</item>
+        <item>160%</item>
+        <item>180%</item>
+        <item>200%</item>
+    </string-array>
+
+    <string-array name="font_size_values">
+        <item>80%</item>
+        <item>90%</item>
+        <item>100%</item>
+        <item>110%</item>
+        <item>120%</item>
+        <item>140%</item>
+        <item>160%</item>
+        <item>180%</item>
+        <item>200%</item>
+    </string-array>
+
+    <!-- Font entries / values -->
+    <string-array name="font_entries">
+        <item>Default</item>
+        <item>Averia</item>
+        <item>DM Mono</item>
+        <item>Lato</item>
+        <item>Franklin</item>
+        <item>Montserrat</item>
+        <item>Noto</item>
+        <item>Roboto</item>
+        <item>Source Sans Pro</item>
+    </string-array>
+
+    <string-array name="font_values">
+        <item>default</item>
+        <item>AveriaSerifLibre</item>
+        <item>DMMono</item>
+        <item>Lato</item>
+        <item>LibreFranklin</item>
+        <item>Montserrat</item>
+        <item>NotoSerif</item>
+        <item>Roboto</item>
+        <item>SourceSansPro</item>
+    </string-array>
+
+</resources>

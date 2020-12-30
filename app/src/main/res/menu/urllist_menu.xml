@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:icon="@drawable/baseline_sort_24"
+        android:title="@string/sort"
+        app:showAsAction="always">
+        <menu>
+            <item
+                android:id="@+id/alphabetical"
+                android:title="@string/sort_alphabetical"
+                app:showAsAction="never" />
+
+            <item
+                android:id="@+id/rating"
+                android:title="@string/sort_rating"
+                app:showAsAction="never" />
+
+            <item
+                android:id="@+id/unread"
+                android:title="@string/sort_unread_first"
+                app:showAsAction="never" />
+        </menu>
+    </item>
+</menu>

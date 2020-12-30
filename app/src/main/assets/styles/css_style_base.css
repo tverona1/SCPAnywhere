@@ -1,0 +1,36 @@
+body {
+    margin-left: 10px;
+    margin-right: 10px;
+    background: transparent;
+}
+
+blockquote {
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+}
+
+div.rimg, div.limg, div.block-right, div.block-left, .image-container, .scp-image-block {
+    width: auto !important;
+    margin: 0 !important;
+    float: none !important;
+    max-width: none !important;
+
+}
+
+.scp-image-block img, .scp-image-block .scp-image-caption {
+    width: 100% !important;
+    margin: 0 !important;
+    float: none !important;
+    max-width: none !important;
+}
+
+#main-content, #page-content, #content-wrap {
+    width: auto !important;
+    margin: 0 !important;
+    float: none !important;
+    max-width: none !important;
+    display: block !important;
+    height: auto !important;
+    min-height: auto !important;
+    padding: 0px !important;
+}
