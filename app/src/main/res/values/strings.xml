@@ -124,4 +124,7 @@
     <string name="base_css_theme">styles/css_style_base.css</string>
     <string name="rateLimitExceeded">Rate limit exceeded trying to download asset. Please try again later.</string>
     <string name="preference_screen_key">preference_screen</string>
+    <string name="error_tts_settings">Error opening text-to-speech system settings</string>
+    <string name="error_export_activity">Error trying to export document</string>
+    <string name="error_share_activity">Error trying to share data</string>
 </resources>

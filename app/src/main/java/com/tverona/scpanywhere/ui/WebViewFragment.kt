@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.view.*
 import android.webkit.*
 import android.widget.ProgressBar
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
@@ -839,7 +838,7 @@ class WebViewFragment : Fragment(), View.OnClickListener {
     }
 
     /**
-     * Show toast of page title when title is clicked
+     * Show snackbar of page title when title is clicked
      */
     override fun onClick(v: View?) {
         val actionBar = (requireActivity() as AppCompatActivity).supportActionBar
@@ -848,12 +847,9 @@ class WebViewFragment : Fragment(), View.OnClickListener {
             if (actionBar.subtitle != null) {
                 fullTitle = fullTitle + " - " + actionBar.subtitle
             }
-            val t = Toast.makeText(
-                context,
-                fullTitle,
-                Toast.LENGTH_SHORT
-            )
-            t.show()
+            if (v != null) {
+                showSnackbar(v, fullTitle)
+            }
         }
     }
 }

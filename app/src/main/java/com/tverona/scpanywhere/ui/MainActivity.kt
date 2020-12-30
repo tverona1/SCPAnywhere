@@ -4,10 +4,10 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
@@ -18,6 +18,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.*
 import androidx.preference.PreferenceManager
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.snackbar.Snackbar
 import com.squareup.moshi.JsonClass
 import com.tverona.scpanywhere.R
 import com.tverona.scpanywhere.downloader.RateLimitExceededException
@@ -132,18 +133,20 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
             loadMenuAsync(navView, drawerLayout)
         }
 
-        // Observe any downloading / IO operations and present status via toasts
+        // Observe any downloading / IO operations and present status via snackbars
+        val coordinatorLayout = findViewById<CoordinatorLayout>(R.id.coordinatorLayout)
+
         offlineDataViewModel.operationState.observe(this) {
             when (it.status) {
                 StateData.Status.ERROR -> it.data?.let { it1 ->
                     if (it.error != null && it.error is RateLimitExceededException) {
-                        sendToast(getString(R.string.rateLimitExceeded))
+                        showSnackbar(coordinatorLayout, getString(R.string.rateLimitExceeded))
                     } else {
-                        sendToast(it1)
+                        showSnackbar(coordinatorLayout, it1)
                     }
                 }
-                StateData.Status.SUCCESS -> it.data?.let { it1 -> sendToast(it1) }
-                StateData.Status.UPDATE -> it.data?.let { it1 -> sendToast(it1) }
+                StateData.Status.SUCCESS -> it.data?.let { it1 -> showSnackbar(coordinatorLayout, it1) }
+                StateData.Status.UPDATE -> it.data?.let { it1 -> showSnackbar(coordinatorLayout, it1) }
             }
         }
 
@@ -188,18 +191,6 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         val lastUrl = getLastUrl()
         logv("Loading launch page. Last url: ${getLastUrl()}")
         webDataViewModel.url.value = lastUrl
-    }
-
-    /**
-     * Sends a toast
-     */
-    private fun sendToast(message: String) {
-        val t = Toast.makeText(
-            this,
-            message,
-            Toast.LENGTH_SHORT
-        )
-        t.show()
     }
 
     /**

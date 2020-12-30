@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.NumberPicker
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import androidx.fragment.app.activityViewModels
@@ -42,6 +41,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private val textToSpeechViewModel: TextToSpeechViewModel by activityViewModels()
     private val scpDataViewModel: ScpDataViewModel by activityViewModels()
     lateinit private var sharedPreferences: SharedPreferences
+    lateinit private var fragmentView: View
 
     @Inject
     lateinit var textToSpeechProvider: TextToSpeechProvider
@@ -54,6 +54,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         super.onViewCreated(view, savedInstanceState)
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        this.fragmentView = view
 
         // Refresh local assets
         offlineDataViewModel.getLocalAssets()
@@ -101,8 +102,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     startActivity(intent)
                 } catch (e: Exception) {
-                    loge("Error opening system setting", e)
-                    // TODO: show toast
+                    loge("Error opening text-to-speech system settings", e)
+                    showSnackbar(view, R.string.error_tts_settings)
                 }
                 true
             }
@@ -212,8 +213,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     ), IMPORT_FILE_INTENT
                 )
             } catch (e: Exception) {
-                Toast.makeText(context, getString(R.string.no_file_manager), Toast.LENGTH_SHORT)
-                    .show()
+                showSnackbar(fragmentView, R.string.no_file_manager)
             }
 
             true
@@ -395,7 +395,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 startActivityForResult(intent, EXPORT_FILE_INTENT)
             } catch (e: Exception) {
                 loge("Error starting activity for ACTION_CREATE_DOCUMENT", e)
-                // TODO: Toast
+                showSnackbar(fragmentView, R.string.error_export_activity)
             }
         }
     }
@@ -447,7 +447,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 requireContext().startActivity(chooser)
             } catch (e: Exception) {
                 loge("Error starting activity for ACTION_SEND", e)
-                // TODO: Toast
+                showSnackbar(fragmentView, R.string.error_share_activity)
             }
         }
     }
@@ -500,7 +500,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     ?.use { stream -> stream.write(json.toByteArray()) }
             } catch (e: Exception) {
                 loge("failed to export file: $source")
-                // todo: toast?
+                showSnackbar(fragmentView, R.string.error_export_activity)
             }
         }
     }
@@ -516,17 +516,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 }
 
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, getString(R.string.imported_data), Toast.LENGTH_SHORT)
-                        .show()
+                    showSnackbar(fragmentView, R.string.imported_data)
                 }
             } catch (e: Exception) {
                 loge("failed to import file: $source", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        context,
-                        getString(R.string.failed_import_data),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    showSnackbar(
+                        fragmentView,
+                        R.string.failed_import_data)
                 }
             }
         }

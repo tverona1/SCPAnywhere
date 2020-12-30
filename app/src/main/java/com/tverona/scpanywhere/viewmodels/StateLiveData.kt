@@ -2,8 +2,9 @@ package com.tverona.scpanywhere.viewmodels
 
 import androidx.lifecycle.MutableLiveData
 import com.tverona.scpanywhere.downloader.StateData
+import com.tverona.scpanywhere.utils.LiveEvent
 
-class StateLiveData<T> : MutableLiveData<StateData<T>>() {
+class StateLiveData<T> : LiveEvent<StateData<T>>() {
     /**
      * Use this to put the Data on a UPDATE DataStatus
      */
