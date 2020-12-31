@@ -3,6 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/upgrade_stale_webview"
+        android:icon="@drawable/baseline_upgrade_24"
+        android:title="@string/upgrade_stale_webview"
+        android:visible="false"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/next"
         android:icon="@drawable/baseline_chevron_right_24"
         android:title="@string/next"

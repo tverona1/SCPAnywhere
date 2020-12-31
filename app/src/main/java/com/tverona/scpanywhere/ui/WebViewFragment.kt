@@ -1,13 +1,19 @@
 package com.tverona.scpanywhere.ui
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageInfo
 import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.*
 import android.webkit.*
 import android.widget.ProgressBar
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
@@ -31,6 +37,7 @@ import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import javax.inject.Inject
+
 
 /**
  * Fragment to handle web view
@@ -348,6 +355,11 @@ class WebViewFragment : Fragment(), View.OnClickListener {
                 }
             }
         }
+
+        if (isStaleWebView()) {
+            val upgradeWebview = menu.findItem(R.id.upgrade_stale_webview)
+            upgradeWebview.setVisible(true)
+        }
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {
@@ -436,6 +448,11 @@ class WebViewFragment : Fragment(), View.OnClickListener {
                     }
                     startActivity(Intent.createChooser(shareIntent, getString(R.string.share_url)))
                 }
+                true
+            }
+            R.id.upgrade_stale_webview -> {
+                // Alert on stale system webview
+                alertOnStaleWebView()
                 true
             }
 
@@ -838,6 +855,90 @@ class WebViewFragment : Fragment(), View.OnClickListener {
     }
 
     /**
+     * Check if System WebView is stale (only applies to API 23 and below).
+     */
+    fun isStaleWebView() : Boolean {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+            // Android N (API 24) and above already has up-to-date system webview
+            return false
+        }
+
+        // If user doesn't want to be bothered by this, ignore
+        val ignoreStaleWebView = sharedPreferences.getBoolean(getString(R.string.upgrade_stale_webview_checked_key), false)
+        if (ignoreStaleWebView) {
+            return false
+        }
+
+        // With Android API 23 and below, the system webview is updated as
+        // a separate APK in the PlayStore. Old webview versions do not render some
+        // SCP pages correctly. Check installed version and warn if an update is needed.
+        try {
+            @SuppressLint("PrivateApi")
+            val webViewFactory = Class.forName("android.webkit.WebViewFactory")
+            val method = webViewFactory.getMethod("getLoadedPackageInfo")
+            val packageInfo = method.invoke(null) as PackageInfo?
+
+            if (packageInfo != null) {
+                if (!packageInfo.packageName.equals(googleWebViewPackageName)) {
+                    logv("Stale webview package info: packageName: ${packageInfo?.packageName}, versionName: ${packageInfo?.versionName}")
+                    return true
+                }
+            }
+        } catch (e: Exception) {
+            loge("Cannot access web view package info", e)
+        }
+
+        // We're up to date; remember this so we don't have to check again.
+        with(sharedPreferences.edit()) {
+            putBoolean(getString(R.string.upgrade_stale_webview_checked_key), true)
+            apply()
+        }
+
+        return false
+    }
+
+    /**
+     * Alert on stale System WebView version
+     */
+    fun alertOnStaleWebView() {
+        AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.upgrade_stale_webview_title))
+            .setMessage(getString(R.string.upgrade_stale_webview_message))
+            .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
+                try {
+                    try {
+                        startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("market://details?id=$googleWebViewPackageName")
+                            )
+                        )
+                    } catch (activityNotFoundException: ActivityNotFoundException) {
+                        // Google Play Store is not installed, fall back to URL
+                        startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("https://play.google.com/store/apps/details?id=$googleWebViewPackageName")
+                            )
+                        )
+                    }
+                } catch (e: Exception) {
+                    loge("Error trying to open Google Play store")
+                }
+            }
+            .setNeutralButton(R.string.upgrade_stale_webview_ignore) { _: DialogInterface, _: Int ->
+                with(sharedPreferences.edit()) {
+                    putBoolean(getString(R.string.upgrade_stale_webview_checked_key), true)
+                    apply()
+                }
+                requireActivity().invalidateOptionsMenu()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .create()
+            .show()
+    }
+
+    /**
      * Show snackbar of page title when title is clicked
      */
     override fun onClick(v: View?) {
@@ -851,5 +952,9 @@ class WebViewFragment : Fragment(), View.OnClickListener {
                 showSnackbar(v, fullTitle)
             }
         }
+    }
+
+    companion object {
+        const val googleWebViewPackageName = "com.google.android.webview"
     }
 }
