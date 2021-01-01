@@ -102,7 +102,8 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                 R.id.favorites_list,
                 R.id.search_scp_list,
                 R.id.search_tale_list,
-                R.id.stats
+                R.id.stats,
+                R.id.about
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)

@@ -84,6 +84,12 @@
         android:name="com.tverona.scpanywhere.ui.StatsFragment"
         tools:layout="@layout/fragment_stats" />
 
+    <fragment
+        android:id="@+id/about"
+        android:label="@string/about"
+        android:name="com.tverona.scpanywhere.ui.AboutFragment"
+        tools:layout="@layout/fragment_about" />
+
     <!--Global action-->
     <action android:id="@+id/action_settings"
         app:destination="@id/nav_settings"/>

@@ -2,8 +2,7 @@
     <string name="app_name">SCP Anywhere</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Android Studio</string>
-    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_title">SCP Anywhere</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
 
@@ -132,4 +131,12 @@
     <string name="upgrade_stale_webview_message">Your device is using a stale version of the System WebView, which does not render some pages correctly. Would you like to upgrade the System WebView via the Google Play Store?</string>
     <string name="upgrade_stale_webview_ignore">Ignore</string>
     <string name="upgrade_stale_webview_checked_key">upgrade_stale_webview_checked_key</string>
+
+    <string name="about_page_description">SCP Anywhere, an SCP Reader app</string>
+    <string name="about_play_store">Rate us on the Play Store</string>
+    <string name="about_github">Visit Github Page</string>
+    <string name="about_image">About Image</string>
+    <string name="about">About</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="github_link">https://github.com/tverona1/SCPAnywhere</string>
 </resources>

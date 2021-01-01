@@ -120,4 +120,63 @@
         <item name="colorSecondary">@color/secondaryColorBlueGray</item>
     </style>
 
+    <style name="about_wrapper">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:padding">20dp</item>
+    </style>
+
+    <style name="about_item">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:padding">8dp</item>
+    </style>
+
+    <style name="about_image">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_marginBottom">30dp</item>
+        <item name="android:layout_marginTop">20dp</item>
+    </style>
+
+    <style name="about_description" parent="@android:style/TextAppearance">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:text">@string/about_page_description</item>
+        <item name="android:lineSpacingExtra">8dp</item>
+        <item name="android:layout_marginBottom">20dp</item>
+        <item name="android:textColor">@color/about_description_text_color</item>
+        <item name="android:textSize">@dimen/about_description_text_size</item>
+    </style>
+
+    <style name="about_separator">
+        <item name="android:layout_height">@dimen/about_separator_height</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:background">@color/about_separator_color</item>
+        <item name="android:padding">0dp</item>
+        <item name="android:layout_marginTop">0dp</item>
+        <item name="android:layout_marginBottom">0dp</item>
+    </style>
+
+    <style name="about_text_item" parent="@android:style/TextAppearance">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/about_text_color</item>
+        <item name="android:textSize">@dimen/about_item_text_size</item>
+        <item name="android:gravity">start|center_vertical</item>
+    </style>
+
+    <style name="about_image_item" parent="@android:style/TextAppearance">
+        <item name="android:layout_width">@dimen/about_icon_size</item>
+        <item name="android:layout_height">@dimen/about_icon_size</item>
+        <item name="android:paddingLeft">@dimen/about_icon_padding</item>
+        <item name="android:paddingRight">@dimen/about_icon_padding</item>
+        <item name="android:paddingTop">0px</item>
+        <item name="android:paddingBottom">0px</item>
+    </style>
 </resources>

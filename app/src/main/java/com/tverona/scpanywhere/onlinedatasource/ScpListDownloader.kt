@@ -5,7 +5,6 @@ import com.tverona.scpanywhere.R
 import com.tverona.scpanywhere.utils.loge
 import com.tverona.scpanywhere.utils.logv
 import com.tverona.scpanywhere.viewmodels.UrlEntry
-import okhttp3.OkHttpClient
 import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
 import org.jsoup.nodes.TextNode
@@ -15,8 +14,7 @@ import javax.inject.Inject
  * Downloads SCP entries from scp-series pages
  */
 class ScpListDownloader @Inject constructor(
-    private val context: Context,
-    private val client: OkHttpClient
+    private val context: Context
 ) {
 
     /**
@@ -29,9 +27,7 @@ class ScpListDownloader @Inject constructor(
         val baseUrl = context.getString(R.string.base_path)
 
         try {
-            // todo: jsoup connect retries
-            // todo: okhttp connect retries
-            var doc = Jsoup.connect(url).timeout(20000).get()
+            val doc = Jsoup.connect(url).timeout(20000).get()
             logv("Processing series url $url")
 
             doc.select("div#page-content li").forEach { elem ->
@@ -39,8 +35,8 @@ class ScpListDownloader @Inject constructor(
                 if (null != a && !a.hasClass("newpage")) {
                     val link = a.attr("href")
                     val nameMatch = "scp-\\d+".toRegex().find(link)
-                    var name = "Unknown" // todo
-                    if (null != nameMatch && nameMatch.groups.size > 0) {
+                    var name = "Unknown"
+                    if (null != nameMatch && nameMatch.groups.isNotEmpty()) {
                         name = nameMatch.groups[0]?.value.toString()
                     }
                     val e = elem.clone()
@@ -84,8 +80,6 @@ class ScpListDownloader @Inject constructor(
             val url = talesPattern.format(talesNum + 1)
 
             try {
-                // todo: jsoup connect retries
-                // todo: okhttp connect retries
                 Jsoup.connect(url).timeout(20000).get()
                 talesNum++
             } catch (e: HttpStatusException) {

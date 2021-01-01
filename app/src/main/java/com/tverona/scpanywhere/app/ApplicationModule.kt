@@ -81,7 +81,7 @@ class ApplicationModule {
         @ApplicationContext appContext: Context,
         okHttpClient: OkHttpClient
     ): ScpListDownloader {
-        return ScpListDownloader(appContext, okHttpClient)
+        return ScpListDownloader(appContext)
     }
 
     @Provides

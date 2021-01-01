@@ -24,8 +24,6 @@ class RatingsDownloader @Inject constructor(
     fun download(): EntryRatings? {
         val url = context.getString(R.string.github_repo_ratings_asset)
         try {
-            // todo: retries?
-            // todo: okhttp connect retries
             logv("Getting ratings asset: $url")
             val json = Jsoup.connect(url).ignoreContentType(true).timeout(20000).get().body().text()
             val moshi = Moshi.Builder().build()

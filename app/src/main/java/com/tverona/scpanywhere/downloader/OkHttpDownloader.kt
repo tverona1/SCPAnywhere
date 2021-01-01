@@ -34,7 +34,6 @@ suspend fun Call.downloadAndSaveTo(
             cancel()
         }
 
-        // TODO: Retries
         enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 cont.resumeWithException(e)

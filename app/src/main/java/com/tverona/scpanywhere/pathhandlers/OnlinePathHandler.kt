@@ -167,9 +167,6 @@ class OnlinePathHandler(
             )
         }
 
-        // todo: scp-4011: check drop-down carets
-        // todo: why does scp-4012 look different in offline mode? picture spacing.
-        // todo: E/com.tverona.scpanywhere.ui.WebViewFragment$loadWebView$2: Error loading page http://scp-wiki.wdfiles.com/local--files/scp-4012/birthcriesoftheuniverse.mp3: net::ERR_FAILED, -1
         return WebResourceResponse(null, null, null)
     }
 }

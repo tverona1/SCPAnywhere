@@ -23,9 +23,7 @@ class TaleListDownloader @Inject constructor(
         val baseUrl = context.getString(R.string.base_path)
 
         try {
-            // todo: jsoup connect retries
-            // todo: okhttp connect retries
-            var doc = Jsoup.connect(url).timeout(20000).get()
+            val doc = Jsoup.connect(url).timeout(20000).get()
             logv("Processing tale titles: $url")
 
             doc.select("div.pages-list div.pages-list-item div.title a[href]").forEach { elem ->

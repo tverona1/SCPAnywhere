@@ -30,7 +30,7 @@ class OfflineDataViewModel @ViewModelInject constructor(
 
     val operationState = StateLiveData<String>()
 
-    // Downlodable items
+    // Downloadable items
     private val _downloadableItems = MutableLiveData<List<RecyclerItem>>()
     val downloadableItems: LiveData<List<RecyclerItem>> = _downloadableItems
     private val downloadableItemsByName = HashMap<String, RecyclerItem>()

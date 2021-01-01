@@ -209,8 +209,6 @@ class OfflineDataRepositoryImpl constructor(
             entry
         }
 
-        // todo: what if sd card is ejected? or new one inserted?
-
         // Default storage to external, else fall back to internal
         defaultExternalDirIndex = default ?: 0
         _externalStorageList.postValue(list)

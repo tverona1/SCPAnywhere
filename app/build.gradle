@@ -5,6 +5,10 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'dagger.hilt.android.plugin'
 
 android {
+    def versionMajor = 0
+    def versionMinor = 9
+    def versionPatch = 1
+
     compileSdkVersion 30
     buildToolsVersion "30.0.2"
 
@@ -12,8 +16,8 @@ android {
         applicationId "com.tverona.scpanywhere"
         minSdkVersion 23
         targetSdkVersion 30
-        versionCode 2
-        versionName "0.9"
+        versionCode versionMajor * 10000 + versionMinor * 100 + versionPatch
+        versionName "${versionMajor}.${versionMinor}.${versionPatch}"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -23,7 +27,14 @@ android {
     }
 
     buildTypes {
+        debug {
+            versionNameSuffix ".debug"
+            resValue "string", "app_version",
+                "${defaultConfig.versionName}${versionNameSuffix}"
+        }
         release {
+            resValue "string", "app_version",
+                    "${defaultConfig.versionName}"
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
