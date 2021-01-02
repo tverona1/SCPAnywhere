@@ -20,6 +20,7 @@
 
                 <ImageView
                     android:id="@+id/image"
+                    app:srcCompat="@mipmap/ic_launcher"
                     style="@style/about_image"
                     android:contentDescription="@string/about_image" />
 
@@ -60,7 +61,6 @@
 
             <View
                 style="@style/about_separator" />
-
             <LinearLayout
                 style="@style/about_item">
 

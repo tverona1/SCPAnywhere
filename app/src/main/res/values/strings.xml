@@ -132,11 +132,15 @@
     <string name="upgrade_stale_webview_ignore">Ignore</string>
     <string name="upgrade_stale_webview_checked_key">upgrade_stale_webview_checked_key</string>
 
-    <string name="about_page_description">SCP Anywhere, an SCP Reader app</string>
+    <string name="about_page_description">SCP Anywhere - Read SCP articles anywhere</string>
     <string name="about_play_store">Rate us on the Play Store</string>
     <string name="about_github">Visit Github Page</string>
     <string name="about_image">About Image</string>
     <string name="about">About</string>
     <string name="about_version">Version %1$s</string>
     <string name="github_link">https://github.com/tverona1/SCPAnywhere</string>
+    <string name="mark_unfavorite">Mark unfavorite</string>
+    <string name="mark_favorite">Mark favorite</string>
+    <string name="mark_unread">Mark unread</string>
+    <string name="mark_read">Mark read</string>
 </resources>

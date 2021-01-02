@@ -80,6 +80,9 @@ class OfflineDataViewModel @ViewModelInject constructor(
     val isDownloading: Boolean
         get() = downloadJob?.isActive == true
 
+    private val _isDownloadingObservable = MutableLiveData<Boolean>(false)
+    val isDownloadingObservable : LiveData<Boolean> = _isDownloadingObservable
+
     val isChangingStorage: Boolean
         get() = changeStorageJob?.isActive == true
 
@@ -107,6 +110,12 @@ class OfflineDataViewModel @ViewModelInject constructor(
             .filter { it.shouldDownload.get() && !it.isDownloading.get()!! }
 
         downloadJob = downloadAssetsAsync(assetsToDownload)
+        if (null != downloadJob) {
+            _isDownloadingObservable.postValue(true)
+            downloadJob?.invokeOnCompletion { cause ->
+                _isDownloadingObservable.postValue(false)
+            }
+        }
     }
 
     fun cancelDownload() {

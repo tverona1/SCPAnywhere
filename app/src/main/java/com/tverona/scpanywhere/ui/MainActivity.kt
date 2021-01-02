@@ -335,7 +335,6 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                         Menu.NONE,
                         item.heading
                     )
-
                     val items = mutableListOf<JsonMenu>()
                     if (item.source != null) {
                         val sourceItems = getMenuDataSource(item.source!!)
@@ -434,7 +433,9 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
             }
             else -> {
                 drawerLayout.closeDrawer(GravityCompat.START)
-                NavigationUI.onNavDestinationSelected(item, navController)
+                val ret = NavigationUI.onNavDestinationSelected(item, navController)
+                item.setChecked(false)
+                ret
             }
         }
     }

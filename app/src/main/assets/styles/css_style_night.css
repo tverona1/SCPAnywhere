@@ -1,11 +1,11 @@
 /* Tag Level Overrides */
 :root {
-  --color-override: #985 !important;
+  --color-override: #998855 !important;
   --color-secondary-override: #888 !important;
   --color-link-override: #d90000 !important;
   --color-visited-override: #ba7272 !important;
-  --background-color-override: #000 !important;
-  --background-color-secondary-override: #0d0d0d !important;
+  --background-color-override: #000000 !important;
+  --background-color-secondary-override: #000000 !important;
 }
 
 body, div {

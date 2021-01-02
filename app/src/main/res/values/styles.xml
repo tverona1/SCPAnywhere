@@ -1,123 +1,76 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="AppTheme.NoActionBar" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Base application theme. -->
-        <!--<item name="colorPrimary">@color/primaryColorSCP</item>-->
+        <item name="actionOverflowMenuStyle">@style/AppTheme.OverflowMenu</item>
+        <item name="navigationViewStyle">@style/AppTheme.NavigationViewStyle</item>
 
-        <item name="actionOverflowMenuStyle">@style/OverflowMenu</item>
+        <item name="navigationMenuBackground">?attr/colorSurface</item>
+        <item name="toolbarBackground">?attr/colorPrimary</item>
+        <item name="navigationItemTextColor">@color/mtrl_navigation_item_text_color</item>
+        <item name="overflowMenuBackground">@drawable/mtrl_popupmenu_background</item>
+        <item name="android:textSize">16sp</item>
     </style>
 
-    <style name="OverflowMenu" parent="Widget.MaterialComponents.PopupMenu.Overflow">
-        <item name="android:overlapAnchor">false</item>
+    <style name="AppTheme.NavigationViewStyle" parent="Widget.MaterialComponents.NavigationView">
+        <item name="itemTextAppearance">@style/AppTheme.NavigationViewItemTextAppearance</item>
+    </style>
+
+    <style name="AppTheme.NavigationViewItemTextAppearance" parent="@style/TextAppearance.MaterialComponents.Subtitle2">
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="AppTheme.OverflowMenu" parent="Widget.MaterialComponents.PopupMenu.Overflow">
+        <item name="overlapAnchor">false</item>
         <item name="android:dropDownVerticalOffset">8.0dip</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:popupBackground">?attr/overflowMenuBackground</item>
     </style>
 
     <style name="listItemTextView" parent="@style/Widget.MaterialComponents.TextView">
         <item name="android:textColor">?attr/colorOnBackground</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">18sp</item>
     </style>
 
     <!-- List of available app themes -->
     <style name="AppTheme.SCP" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryLightColorSCP</item>
-        <item name="colorSecondary">@color/secondaryColorSCP</item>
+        <item name="colorPrimary">@color/rosewood</item>
+        <item name="colorSecondary">@color/rosewood</item>
+        <item name="toolbarBackground">@color/whiteSmoke</item>
+        <item name="navigationMenuBackground">@color/whiteSmoke</item>
+        <item name="android:colorBackground">@color/whiteSmoke</item>
+        <item name="colorBackgroundFloating">@color/whiteSmoke</item>
+        <item name="overflowMenuBackground">@color/whiteSmoke</item>
     </style>
 
-    <style name="AppTheme.Red" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorRed</item>
-        <item name="colorSecondary">@color/secondaryColorRed</item>
+    <style name="AppTheme.Warm" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColorBrown</item>
+        <item name="colorSecondary">@color/primaryDarkColorBrown</item>
+        <item name="toolbarBackground">@color/beigeWarmColor</item>
+        <item name="navigationMenuBackground">@color/beigeWarmColor</item>
+        <item name="android:colorBackground">@color/beigeWarmColor</item>
+        <item name="colorBackgroundFloating">@color/beigeWarmColor</item>
+        <item name="overflowMenuBackground">@color/beigeWarmColor</item>
     </style>
 
-    <style name="AppTheme.Pink" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorPink</item>
-        <item name="colorSecondary">@color/secondaryColorPink</item>
+    <style name="AppTheme.Night" parent="AppTheme.NoActionBar">
     </style>
 
-    <style name="AppTheme.Purple" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorPurple</item>
-        <item name="colorSecondary">@color/secondaryColorPurple</item>
+    <style name="AppTheme.Navy" parent="AppTheme.NoActionBar">
     </style>
 
-    <style name="AppTheme.DeepPurple" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorDeepPurple</item>
-        <item name="colorSecondary">@color/secondaryColorDeepPurple</item>
-    </style>
-
-    <style name="AppTheme.Indigo" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorIndigo</item>
-        <item name="colorSecondary">@color/secondaryColorIndigo</item>
-    </style>
-
-    <style name="AppTheme.Blue" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorBlue</item>
-        <item name="colorSecondary">@color/secondaryColorBlue</item>
-    </style>
-
-    <style name="AppTheme.LightBlue" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorLightBlue</item>
-        <item name="colorSecondary">@color/secondaryColorLightBlue</item>
-    </style>
-
-    <style name="AppTheme.Cyan" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorCyan</item>
-        <item name="colorSecondary">@color/secondaryColorCyan</item>
-    </style>
-
-    <style name="AppTheme.Teal" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorTeal</item>
-        <item name="colorSecondary">@color/secondaryColorTeal</item>
-    </style>
-
-    <style name="AppTheme.Green" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorGreen</item>
-        <item name="colorSecondary">@color/secondaryColorGreen</item>
-    </style>
-
-    <style name="AppTheme.LightGreen" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorLightGreen</item>
-        <item name="colorSecondary">@color/secondaryColorLightGreen</item>
-    </style>
-
-    <style name="AppTheme.Lime" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorLime</item>
-        <item name="colorSecondary">@color/secondaryColorLime</item>
-    </style>
-
-    <style name="AppTheme.Yellow" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorYellow</item>
-        <item name="colorSecondary">@color/secondaryColorYellow</item>
-    </style>
-
-    <style name="AppTheme.Amber" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorAmber</item>
-        <item name="colorSecondary">@color/secondaryColorAmber</item>
-    </style>
-
-    <style name="AppTheme.Orange" parent="AppTheme.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/primaryColorOrange</item>
-        <item name="colorSecondary">@color/secondaryColorOrange</item>
-    </style>
-
-    <style name="AppTheme.DeepOrange" parent="AppTheme.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/primaryColorDeepOrange</item>
-        <item name="colorSecondary">@color/secondaryColorDeepOrange</item>
-    </style>
-
-    <style name="AppTheme.Brown" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorBrown</item>
-        <item name="colorSecondary">@color/secondaryColorBrown</item>
-    </style>
-
-    <style name="AppTheme.Gray" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorGray</item>
+    <style name="AppTheme.EBook" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/secondaryColorGray</item>
         <item name="colorSecondary">@color/secondaryColorGray</item>
-    </style>
-
-    <style name="AppTheme.BlueGray" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryColorBlueGray</item>
-        <item name="colorSecondary">@color/secondaryColorBlueGray</item>
+        <item name="android:textColorPrimary">@android:color/black</item>
+        <item name="android:textColorSecondary">@android:color/black</item>
+        <item name="android:textColor">@android:color/black</item>
+        <item name="navigationItemTextColor">@android:color/black</item>
+        <item name="textColorAlertDialogListItem">@android:color/black</item>
+        <item name="toolbarBackground">@android:color/white</item>
+        <item name="navigationMenuBackground">@android:color/white</item>
+        <item name="android:colorBackground">@android:color/white</item>
+        <item name="colorBackgroundFloating">@android:color/white</item>
+        <item name="overflowMenuBackground">@android:color/white</item>
     </style>
 
     <style name="about_wrapper">
@@ -150,7 +103,6 @@
         <item name="android:text">@string/about_page_description</item>
         <item name="android:lineSpacingExtra">8dp</item>
         <item name="android:layout_marginBottom">20dp</item>
-        <item name="android:textColor">@color/about_description_text_color</item>
         <item name="android:textSize">@dimen/about_description_text_size</item>
     </style>
 
@@ -166,7 +118,6 @@
     <style name="about_text_item" parent="@android:style/TextAppearance">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textColor">@color/about_text_color</item>
         <item name="android:textSize">@dimen/about_item_text_size</item>
         <item name="android:gravity">start|center_vertical</item>
     </style>

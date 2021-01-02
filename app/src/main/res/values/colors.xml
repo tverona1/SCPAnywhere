@@ -3,14 +3,21 @@
     <color name="separator">#7ca6a6a6</color>
 
     <!-- SCP theme -->
+    <color name="whiteSmoke">#F4F4F4</color>
     <color name="primaryColorSCP">#424248</color>
     <color name="primaryLightColorSCP">#9E9E9E</color>
     <color name="primaryDarkColorSCP">#1b1b21</color>
-    <color name="secondaryColorSCP">#850005</color>
+    <color name="rosewood">#850005</color>
     <color name="secondaryLightColorSCP">#f05545</color>
     <color name="secondaryDarkColorSCP">#530000</color>
     <color name="primaryTextColorSCP">#ffffff</color>
     <color name="secondaryTextColorSCP">#ffffff</color>
+
+    <color name="beigeWarmColor">#fff3cd</color>
+    <color name="darkGold">#998855</color>
+    <color name="darkGrey">#112233</color>
+    <color name="greyBlue">#bbcccc</color>
+    <color name="blueGreen">#77ddbb</color>
 
     <!-- Red Theme -->
     <color name="primaryColorRed">#F44336</color>
@@ -174,6 +181,7 @@
     <color name="secondaryTextColorDeepOrange">#000000</color>
 
     <!-- Brown Theme -->
+    <color name="barkBrown">#121212</color>
     <color name="primaryColorBrown">#795548</color>
     <color name="primaryLightColorBrown">#D7CCC8</color>
     <color name="primaryDarkColorBrown">#5D4037</color>

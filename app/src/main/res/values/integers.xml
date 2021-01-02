@@ -7,24 +7,9 @@
 
     <!-- Corresponds to list of app themes -->
     <integer name="AppTheme.SCP">1</integer>
-    <integer name="AppTheme.Red">2</integer>
-    <integer name="AppTheme.Pink">3</integer>
-    <integer name="AppTheme.Purple">4</integer>
-    <integer name="AppTheme.DeepPurple">5</integer>
-    <integer name="AppTheme.Indigo">6</integer>
-    <integer name="AppTheme.Blue">7</integer>
-    <integer name="AppTheme.LightBlue">8</integer>
-    <integer name="AppTheme.Cyan">9</integer>
-    <integer name="AppTheme.Teal">10</integer>
-    <integer name="AppTheme.Green">11</integer>
-    <integer name="AppTheme.LightGreen">12</integer>
-    <integer name="AppTheme.Lime">13</integer>
-    <integer name="AppTheme.Yellow">14</integer>
-    <integer name="AppTheme.Amber">15</integer>
-    <integer name="AppTheme.Orange">16</integer>
-    <integer name="AppTheme.DeepOrange">17</integer>
-    <integer name="AppTheme.Brown">18</integer>
-    <integer name="AppTheme.Gray">19</integer>
-    <integer name="AppTheme.BlueGray">20</integer>
+    <integer name="AppTheme.Warm">2</integer>
+    <integer name="AppTheme.Night">3</integer>
+    <integer name="AppTheme.Navy">4</integer>
+    <integer name="AppTheme.EBook">5</integer>
 
 </resources>

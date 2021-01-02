@@ -9,8 +9,10 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.tverona.scpanywhere.R
 import com.tverona.scpanywhere.databinding.FragmentDownloaderBinding
+import com.tverona.scpanywhere.utils.logv
 import com.tverona.scpanywhere.utils.observeOnce
 import com.tverona.scpanywhere.viewmodels.OfflineDataViewModel
+import kotlinx.android.synthetic.main.fragment_downloader.*
 
 /**
  * Fragment to manage downloadable assets for offline mode
@@ -30,11 +32,26 @@ class DownloadFragment : Fragment() {
         // Get latest release metadata
         offlineDataViewModel.downloadLatestReleaseMetadata()
 
-        return FragmentDownloaderBinding.inflate(inflater, container, false)
+        val binding = FragmentDownloaderBinding.inflate(inflater, container, false)
             .also {
                 it.viewModel = offlineDataViewModel
                 it.lifecycleOwner = viewLifecycleOwner
-                it.downloadButton.setOnClickListener { view ->
+            }
+
+        offlineDataViewModel.isDownloadingObservable.observe(viewLifecycleOwner) { isDownloading ->
+            if (isDownloading) {
+                logv("Downloading")
+                binding.downloadButton.text = getString(android.R.string.cancel)
+            } else {
+                logv("Finished downloading")
+                binding.downloadButton.text = getString(R.string.download)
+            }
+
+            binding.downloadButton.setOnClickListener { view ->
+
+                if (isDownloading) {
+                    offlineDataViewModel.cancelDownload()
+                } else {
                     var title: String? = null
                     var description: String? = null
 
@@ -67,10 +84,13 @@ class DownloadFragment : Fragment() {
                                 .show()
                         } else {
                             offlineDataViewModel.download()
+                            offlineDataViewModel._localItemsSize
                         }
                     }
                 }
             }
-            .root
+        }
+
+        return binding.root
     }
 }

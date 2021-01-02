@@ -10,25 +10,10 @@ import com.tverona.scpanywhere.R
 class ThemeUtil(private val context: Context) {
     private val styleToAppTheme = mapOf(
         context.resources.getInteger(R.integer.AppTheme_SCP) to R.style.AppTheme_SCP,
-        context.resources.getInteger(R.integer.AppTheme_Red) to R.style.AppTheme_Red,
-        context.resources.getInteger(R.integer.AppTheme_Pink) to R.style.AppTheme_Pink,
-        context.resources.getInteger(R.integer.AppTheme_Purple) to R.style.AppTheme_Purple,
-        context.resources.getInteger(R.integer.AppTheme_DeepPurple) to R.style.AppTheme_DeepPurple,
-        context.resources.getInteger(R.integer.AppTheme_Indigo) to R.style.AppTheme_Indigo,
-        context.resources.getInteger(R.integer.AppTheme_Blue) to R.style.AppTheme_Blue,
-        context.resources.getInteger(R.integer.AppTheme_LightBlue) to R.style.AppTheme_LightBlue,
-        context.resources.getInteger(R.integer.AppTheme_Cyan) to R.style.AppTheme_Cyan,
-        context.resources.getInteger(R.integer.AppTheme_Teal) to R.style.AppTheme_Teal,
-        context.resources.getInteger(R.integer.AppTheme_Green) to R.style.AppTheme_Green,
-        context.resources.getInteger(R.integer.AppTheme_LightGreen) to R.style.AppTheme_LightGreen,
-        context.resources.getInteger(R.integer.AppTheme_Lime) to R.style.AppTheme_Lime,
-        context.resources.getInteger(R.integer.AppTheme_Yellow) to R.style.AppTheme_Yellow,
-        context.resources.getInteger(R.integer.AppTheme_Amber) to R.style.AppTheme_Amber,
-        context.resources.getInteger(R.integer.AppTheme_Orange) to R.style.AppTheme_Orange,
-        context.resources.getInteger(R.integer.AppTheme_DeepOrange) to R.style.AppTheme_DeepOrange,
-        context.resources.getInteger(R.integer.AppTheme_Brown) to R.style.AppTheme_Brown,
-        context.resources.getInteger(R.integer.AppTheme_Gray) to R.style.AppTheme_Gray,
-        context.resources.getInteger(R.integer.AppTheme_BlueGray) to R.style.AppTheme_BlueGray
+        context.resources.getInteger(R.integer.AppTheme_Warm) to R.style.AppTheme_Warm,
+        context.resources.getInteger(R.integer.AppTheme_Night) to R.style.AppTheme_Night,
+        context.resources.getInteger(R.integer.AppTheme_Navy) to R.style.AppTheme_Navy,
+        context.resources.getInteger(R.integer.AppTheme_EBook) to R.style.AppTheme_EBook
     )
 
     fun initializeTheme(themeValue: String?) {
@@ -52,7 +37,7 @@ class ThemeUtil(private val context: Context) {
         }
 
         val isLightTheme =
-            context.resources.getIntArray(R.array.style_to_light_vs_darK_theme)
+            context.resources.getIntArray(R.array.style_to_light_vs_dark_theme)
                 .getOrNull(index) == 0
 
         // Set the theme

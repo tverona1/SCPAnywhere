@@ -1,9 +1,47 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- List of available app themes -->
     <style name="AppTheme.SCP" parent="AppTheme.NoActionBar">
-        <item name="colorPrimary">@color/primaryDarkColorSCP</item>
+        <item name="colorPrimary">@color/secondaryLightColorSCP</item>
         <item name="colorSecondary">@color/secondaryLightColorSCP</item>
+        <item name="toolbarBackground">@color/barkBrown</item>
+        <item name="navigationMenuBackground">@color/barkBrown</item>
+        <item name="android:colorBackground">@color/barkBrown</item>
+        <item name="colorBackgroundFloating">@color/barkBrown</item>
+        <item name="overflowMenuBackground">@color/barkBrown</item>
     </style>
+
+    <style name="AppTheme.Night" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/secondaryDarkColorBlueGray</item>
+        <item name="colorSecondary">@color/secondaryDarkColorBlueGray</item>
+        <item name="android:textColorPrimary">@color/darkGold</item>
+        <item name="android:textColorSecondary">@color/darkGold</item>
+        <item name="android:textColor">@color/darkGold</item>
+        <item name="navigationItemTextColor">@color/darkGold</item>
+        <item name="textColorAlertDialogListItem">@color/darkGold</item>
+        <item name="toolbarBackground">@android:color/black</item>
+        <item name="navigationMenuBackground">@android:color/black</item>
+        <item name="android:colorBackground">@android:color/black</item>
+        <item name="colorBackgroundFloating">@android:color/black</item>
+        <item name="overflowMenuBackground">@android:color/black</item>
+    </style>
+
+    <style name="AppTheme.Navy" parent="AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/blueGreen</item>
+        <item name="colorSecondary">@color/blueGreen</item>
+        <item name="android:textColorPrimary">@color/greyBlue</item>
+        <item name="android:textColorSecondary">@color/greyBlue</item>
+        <item name="android:textColor">@color/greyBlue</item>
+        <item name="navigationItemTextColor">@color/greyBlue</item>
+        <item name="textColorAlertDialogListItem">@color/greyBlue</item>
+        <item name="toolbarBackground">@color/darkGrey</item>
+        <item name="navigationMenuBackground">@color/darkGrey</item>
+        <item name="android:colorBackground">@color/darkGrey</item>
+        <item name="colorBackgroundFloating">@color/darkGrey</item>
+        <item name="overflowMenuBackground">@color/darkGrey</item>
+    </style>
+
+
+
 
     <style name="AppTheme.Red" parent="AppTheme.NoActionBar">
         <item name="colorPrimary">@color/primaryDarkColorRed</item>

@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
+    <attr name="navigationMenuBackground" format="reference"/>
+    <attr name="toolbarBackground" format="reference"/>
+    <attr name="navigationItemTextColor" format="reference"/>
+    <attr name="overflowMenuBackground" format="reference"/>
 </resources>

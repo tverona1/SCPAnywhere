@@ -331,11 +331,13 @@ class WebViewFragment : Fragment(), View.OnClickListener {
                         requireActivity(),
                         R.drawable.baseline_bookmark_24
                     )
+                    readItem.title = getString(R.string.mark_unread)
                 } else {
                     readItem.icon = ContextCompat.getDrawable(
                         requireActivity(),
                         R.drawable.baseline_bookmark_border_24
                     )
+                    readItem.title = getString(R.string.mark_read)
                 }
             }
 
@@ -347,11 +349,13 @@ class WebViewFragment : Fragment(), View.OnClickListener {
                         requireActivity(),
                         R.drawable.baseline_favorite_24
                     )
+                    favoriteItem.title = getString(R.string.mark_unfavorite)
                 } else {
                     favoriteItem.icon = ContextCompat.getDrawable(
                         requireActivity(),
                         R.drawable.baseline_favorite_border_24
                     )
+                    favoriteItem.title = getString(R.string.mark_favorite)
                 }
             }
         }

@@ -22,14 +22,14 @@
     <integer-array name="style_to_app_theme">
         <item>@integer/AppTheme.SCP</item>
         <item>@integer/AppTheme.SCP</item>
-        <item>@integer/AppTheme.Amber</item>
-        <item>@integer/AppTheme.BlueGray</item>
-        <item>@integer/AppTheme.Blue</item>
-        <item>@integer/AppTheme.Gray</item>
+        <item>@integer/AppTheme.Warm</item>
+        <item>@integer/AppTheme.Night</item>
+        <item>@integer/AppTheme.Navy</item>
+        <item>@integer/AppTheme.EBook</item>
     </integer-array>
 
     <!-- Style to light / dark app theme mapping: Each entry above corresponds to either light or dark app theme -->
-    <integer-array name="style_to_light_vs_darK_theme">
+    <integer-array name="style_to_light_vs_dark_theme">
         <item>0</item>
         <item>1</item>
         <item>0</item>
