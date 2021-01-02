@@ -42,25 +42,15 @@ async function processContent($, filePath) {
         rating = null
     }
 
-    var processTags = true
     var tagNames = []
     var span = $('div.page-tags').first().find('span').first()
-    if (!span.length) {
-        processTags = false
-        span = $('span.scpanywhere_tags').first()
-    }
     if (span.length) {
         span.find('a').each((index, element) => {
             tagNames.push($(element).text().toLowerCase().trim())
         })
 
-        if (processTags) {
-            span.addClass('scpanywhere_tags')
-            span.before('Tags:');
-            span.before('<hr>');
-            var contents = span.parent().contents()
-            span.parent().replaceWith(contents)
-        }
+        span.before('<hr>Tags:');
+        span.replaceWith(span.contents())
     }
 
     // Nuke all but these two elements

@@ -69,7 +69,10 @@ class OfflineDataViewModel @ViewModelInject constructor(
     private val localMatchingItems = MutableLiveData<List<DownloadAssetMetadata>>()
 
     private val _onDownloadableItemClick = MutableLiveData<DownloadAssetMetadata>()
-    val onDownloadablelick: LiveData<DownloadAssetMetadata> = _onDownloadableItemClick
+    val onDownloadableClick: LiveData<DownloadAssetMetadata> = _onDownloadableItemClick
+
+    private val _onDeleteItemClick = MutableLiveData<LocalAssetMetadata>()
+    val onDeleteClick: LiveData<LocalAssetMetadata> = _onDeleteItemClick
 
     private val _localItemClick = MutableLiveData<LocalAssetMetadata>()
     val onLocalItemClick: LiveData<LocalAssetMetadata> = _localItemClick
@@ -619,6 +622,10 @@ class OfflineDataViewModel @ViewModelInject constructor(
     }
 
     private fun onDeleteClickItem(asset: LocalAssetMetadata) {
+        _onDeleteItemClick.value = asset
+    }
+
+    fun deleteLocalAsset(asset: LocalAssetMetadata) {
         viewModelScope.launch {
             deleteFile(asset.path)
 
@@ -649,6 +656,10 @@ class OfflineDataViewModel @ViewModelInject constructor(
 
     fun clearOnOnDiskClickItem() {
         _localItemClick.value = null
+    }
+
+    fun clearOnDeleteClickItem() {
+        _onDeleteItemClick.value = null
     }
 
     companion object {

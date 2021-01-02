@@ -20,8 +20,8 @@ import com.tverona.scpanywhere.databinding.FragmentExportBinding
  * Dialog fragment for exporting saved data to given [inputFileName] file path. User's choice is invoked on [exportActionListener] call back.
  */
 class ExportFragment(
-    private val inputFileName: String,
-    private val exportActionListener: ExportActionListener
+    private val inputFileName: String? = null,
+    private val exportActionListener: ExportActionListener? = null
 ) : DialogFragment() {
     interface ExportActionListener {
         fun onExportToShare(fileName: String)
@@ -49,6 +49,11 @@ class ExportFragment(
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val binding = FragmentExportBinding.inflate(layoutInflater)
+
+        if (exportActionListener == null || inputFileName == null) {
+            // Bail out if we're constructed with defaults (i.e. as result of orientation change)
+            return super.onCreateDialog(savedInstanceState)
+        }
 
         binding.fileName.setText(inputFileName)
 

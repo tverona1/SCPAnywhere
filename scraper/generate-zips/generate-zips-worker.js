@@ -55,7 +55,7 @@ function filterByTagRule($, tagRule, path) {
             // Matched on ignore tag rule
             match = true;
         } else {
-            const tag = $('span.scpanywhere_tags a').filter(function () {
+            const tag = $('div.page-tags a').filter(function () {
                 return (tagRule.tags.findIndex(tagElem => $(this).text().toLowerCase().trim() === tagElem) !== -1);
             });
 
