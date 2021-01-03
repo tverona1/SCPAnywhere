@@ -1,6 +1,6 @@
 <img src="app/src/main/ic_feature-playstore.png" width="512" alt="SCP Anywhere">  
 
-The entire contents of the SCP Foundation Wiki at your fingertips.
+The entire contents of the [SCP Foundation Wiki](http://www.scpwiki.com) at your fingertips.
 
 Read about anomalous and mysterious events, locations and beings from the SCP Foundation. Secure, Contain, Protect.
 
