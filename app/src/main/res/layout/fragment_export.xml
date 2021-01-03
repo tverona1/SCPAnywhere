@@ -7,7 +7,7 @@
     android:layout_height="match_parent">
 
     <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/description"
+        android:id="@+id/export_description"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/export_name"
@@ -29,7 +29,7 @@
         android:inputType="text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/description"
+        app:layout_constraintTop_toBottomOf="@+id/export_description"
         app:layout_constraintBottom_toTopOf="@+id/spinner" />
 
     <Spinner

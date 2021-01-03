@@ -25,7 +25,7 @@
                     android:contentDescription="@string/about_image" />
 
                 <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/description"
+                    android:id="@+id/about_description"
                     style="@style/about_description" />
             </LinearLayout>
 

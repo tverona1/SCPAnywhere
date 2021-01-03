@@ -132,7 +132,7 @@
     <string name="upgrade_stale_webview_ignore">Ignore</string>
     <string name="upgrade_stale_webview_checked_key">upgrade_stale_webview_checked_key</string>
 
-    <string name="about_page_description">SCP Anywhere - Read SCP articles anywhere</string>
+    <string name="about_page_description">SCP Anywhere - The entire contents of the <a href="http://www.scpwiki.com">SCP Foundation Wiki</a> at your fingertips. Read about anomalous and mysterious events, locations and beings from the SCP Foundation. Secure, Contain, Protect.</string>
     <string name="about_play_store_rate">Rate in-app now</string>
     <string name="about_play_store_visit">Visit us on the Play Store</string>
     <string name="about_github">Visit Github Page</string>
