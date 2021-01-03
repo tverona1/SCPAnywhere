@@ -39,3 +39,7 @@ div.rimg, div.limg, div.block-right, div.block-left, .image-container, .scp-imag
     min-height: auto !important;
     padding: 0px !important;
 }
+
+.anom-bar-container {
+    word-break: normal;
+}
