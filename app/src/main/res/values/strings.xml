@@ -133,7 +133,8 @@
     <string name="upgrade_stale_webview_checked_key">upgrade_stale_webview_checked_key</string>
 
     <string name="about_page_description">SCP Anywhere - Read SCP articles anywhere</string>
-    <string name="about_play_store">Rate us on the Play Store</string>
+    <string name="about_play_store_rate">Rate in-app now</string>
+    <string name="about_play_store_visit">Visit us on the Play Store</string>
     <string name="about_github">Visit Github Page</string>
     <string name="about_image">About Image</string>
     <string name="about">About</string>
@@ -147,4 +148,5 @@
     <string name="titleDeleteItem">Delete %1$s?</string>
     <string name="export_name">Name of export file</string>
     <string name="export_name_hint">Export file name</string>
+    <string name="no_updates">No updates available</string>
 </resources>

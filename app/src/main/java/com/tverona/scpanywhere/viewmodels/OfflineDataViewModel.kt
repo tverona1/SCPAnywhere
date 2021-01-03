@@ -386,10 +386,6 @@ class OfflineDataViewModel @ViewModelInject constructor(
         }
     }
 
-    // todo: if downloading, gray out checkbox
-    // todo: if no internet connection, show warning (toast?)
-    // todo: if no entries, display none. also in local assets view.
-
     /**
      * Download latest release metadata
      */
@@ -473,8 +469,6 @@ class OfflineDataViewModel @ViewModelInject constructor(
             _downloadSizeDelta.postValue(remainingSpace)
         }
     }
-
-    // todo: when deleting, ask are you sure confirmation?
 
     /**
      * Processes the list of [downloadableAssets]

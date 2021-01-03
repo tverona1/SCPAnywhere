@@ -8,9 +8,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.google.android.play.core.review.ReviewManagerFactory
 import com.tverona.scpanywhere.R
 import com.tverona.scpanywhere.databinding.FragmentAboutBinding
 import com.tverona.scpanywhere.utils.loge
+import com.tverona.scpanywhere.utils.showSnackbar
 import kotlinx.android.synthetic.main.fragment_about.*
 
 
@@ -27,6 +29,7 @@ class AboutFragment : Fragment() {
         return FragmentAboutBinding.inflate(inflater, container, false)
             .also {
                 it.aboutVersion.text=getString(R.string.about_version, getString(R.string.app_version))
+
                 it.playStore.setOnClickListener { _ ->
                     try {
                         try {
@@ -46,9 +49,31 @@ class AboutFragment : Fragment() {
                             )
                         }
                     } catch (e: Exception) {
-                        loge("Error trying to open Google Play store")
+                        loge("Error trying to open Google Play store", e)
                     }
                 }
+
+                /*
+                it.playStoreRate.setOnClickListener { _ ->
+                    try {
+                        val manager =
+                            ReviewManagerFactory.create(requireContext())
+                        val request = manager.requestReviewFlow()
+                        request.addOnCompleteListener { request ->
+                            val reviewInfo = request.result
+                            val flow = manager.launchReviewFlow(requireActivity(), reviewInfo)
+                            flow.addOnCompleteListener { _ ->
+                                // The flow has finished. The API does not indicate whether the user
+                                // reviewed or not, or even whether the review dialog was shown. Thus, no
+                                // matter the result, we continue our app flow.
+                            }
+                        }
+                    } catch (e: Exception) {
+                        loge("Error trying to rate", e)
+                    }
+                }
+                 */
+
                 it.github.setOnClickListener { _ ->
                     val intent = Intent()
                     intent.action = Intent.ACTION_VIEW

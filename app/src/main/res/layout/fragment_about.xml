@@ -44,6 +44,7 @@
             <View
                 style="@style/about_separator" />
 
+
             <LinearLayout
                 style="@style/about_item">
 
@@ -55,12 +56,32 @@
 
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/play_store"
-                    android:text="@string/about_play_store"
+                    android:text="@string/about_play_store_visit"
                     style="@style/about_text_item" />
             </LinearLayout>
 
             <View
                 style="@style/about_separator" />
+
+            <!--
+            <LinearLayout
+                style="@style/about_item">
+
+                <ImageView
+                    style="@style/about_image_item"
+                    app:tint="@color/about_play_store_color"
+                    android:src="@drawable/about_icon_google_play"
+                    android:contentDescription="@string/about_image" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/play_store_rate"
+                    android:text="@string/about_play_store_rate"
+                    style="@style/about_text_item" />
+            </LinearLayout>
+
+            <View
+                style="@style/about_separator" />-->
+
             <LinearLayout
                 style="@style/about_item">
 

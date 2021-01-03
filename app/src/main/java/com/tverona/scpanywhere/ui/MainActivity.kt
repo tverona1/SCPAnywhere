@@ -18,7 +18,6 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.*
 import androidx.preference.PreferenceManager
 import com.google.android.material.navigation.NavigationView
-import com.google.android.material.snackbar.Snackbar
 import com.squareup.moshi.JsonClass
 import com.tverona.scpanywhere.R
 import com.tverona.scpanywhere.downloader.RateLimitExceededException
@@ -101,9 +100,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                 R.id.read_list,
                 R.id.favorites_list,
                 R.id.search_scp_list,
-                R.id.search_tale_list,
-                R.id.stats,
-                R.id.about
+                R.id.search_tale_list
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -130,7 +127,6 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
 
         // Set up dynamic menu items
         scpDataViewModel.allBySeries.observe(this) {
-            // todo: error checking
             loadMenuAsync(navView, drawerLayout)
         }
 
@@ -146,8 +142,18 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                         showSnackbar(coordinatorLayout, it1)
                     }
                 }
-                StateData.Status.SUCCESS -> it.data?.let { it1 -> showSnackbar(coordinatorLayout, it1) }
-                StateData.Status.UPDATE -> it.data?.let { it1 -> showSnackbar(coordinatorLayout, it1) }
+                StateData.Status.SUCCESS -> it.data?.let { it1 ->
+                    showSnackbar(
+                        coordinatorLayout,
+                        it1
+                    )
+                }
+                StateData.Status.UPDATE -> it.data?.let { it1 ->
+                    showSnackbar(
+                        coordinatorLayout,
+                        it1
+                    )
+                }
             }
         }
 
@@ -350,23 +356,35 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
     }
 
     private fun getOnlineMenuInputStream(): InputStream? {
-        return resources.openRawResource(R.raw.site_menu)
+        try {
+            return resources.openRawResource(R.raw.site_menu)
+        } catch (e: Exception) {
+            loge("Error opening menu resource", e)
+        }
+
+        return null
     }
 
     private suspend fun getOfflineMenuInputStream(): InputStream? {
-        offlineDataViewModel.zip.await()
-        val offlineMenu = offlineDataViewModel.zip.value?.getInputStream(
-            applicationContext.resources.getString(
-                R.string.menu_jsonfile
+        try {
+            offlineDataViewModel.zip.await()
+            val offlineMenu = offlineDataViewModel.zip.value?.getInputStream(
+                applicationContext.resources.getString(
+                    R.string.menu_jsonfile
+                )
             )
-        )
 
-        // If offline menu does not exist, fall back to resource menu
-        if (null == offlineMenu) {
-            return getOnlineMenuInputStream()
-        } else {
-            return offlineMenu
+            // If offline menu does not exist, fall back to resource menu
+            if (null == offlineMenu) {
+                return getOnlineMenuInputStream()
+            } else {
+                return offlineMenu
+            }
+        } catch (e: Exception) {
+            loge("Error opening offline menu", e)
         }
+
+        return null
     }
 
     /**
@@ -388,14 +406,18 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                 }
 
                 if (null != inputStream) {
-                    val listMenu = JsonList.loadJsonList<JsonMenu>(inputStream)
-                    withContext(Dispatchers.Main) {
-                        try {
-                            // Load the menu
-                            loadMenu(listMenu, navView, drawerLayout)
-                        } catch (e: Exception) {
-                            loge("Error loading menu", e)
+                    try {
+                        val listMenu = JsonList.loadJsonList<JsonMenu>(inputStream)
+                        withContext(Dispatchers.Main) {
+                            try {
+                                // Load the menu
+                                loadMenu(listMenu, navView, drawerLayout)
+                            } catch (e: Exception) {
+                                loge("Error loading menu", e)
+                            }
                         }
+                    } catch (e: Exception) {
+                        loge("Error processing menu", e)
                     }
                 }
             }
@@ -522,10 +544,10 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
 
         val voice = textToSpeechProvider.voices.toList().filterNotNull()
             .distinctBy { it.locale.displayName }.filter {
-            it.name.equals(
-                voiceName
-            )
-        }.firstOrNull()
+                it.name.equals(
+                    voiceName
+                )
+            }.firstOrNull()
 
         logv("Set speech voice to $voiceName")
         textToSpeechProvider.voice = voice ?: textToSpeechProvider.defaultVoice
@@ -563,10 +585,13 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                         textToSpeechProvider.defaultEngine
                     )
 
-                    if (textToSpeechProvider.currentEngineName == null || !enginePackageName.equals(textToSpeechProvider.currentEngineName)) {
-                            logv("Changing speech engine package to $enginePackageName")
-                            initializeTextToSpeechProvider(enginePackageName)
-                        }
+                    if (textToSpeechProvider.currentEngineName == null || !enginePackageName.equals(
+                            textToSpeechProvider.currentEngineName
+                        )
+                    ) {
+                        logv("Changing speech engine package to $enginePackageName")
+                        initializeTextToSpeechProvider(enginePackageName)
+                    }
                 }
                 getString(R.string.voice_key) -> {
                     setTextToSpeechVoice()

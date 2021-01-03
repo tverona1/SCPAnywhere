@@ -38,6 +38,18 @@ class DownloadFragment : Fragment() {
                 it.lifecycleOwner = viewLifecycleOwner
             }
 
+        offlineDataViewModel.downloadableItems.observe(viewLifecycleOwner) {
+            if (it.size == 0) {
+                binding.downloadButton.isEnabled = false
+                binding.noUpdates.visibility = View.VISIBLE
+                binding.recyclerView.visibility = View.GONE
+            } else {
+                binding.downloadButton.isEnabled = true
+                binding.noUpdates.visibility = View.GONE
+                binding.recyclerView.visibility = View.VISIBLE
+            }
+        }
+
         offlineDataViewModel.isDownloadingObservable.observe(viewLifecycleOwner) { isDownloading ->
             if (isDownloading) {
                 logv("Downloading")
