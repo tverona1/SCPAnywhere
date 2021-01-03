@@ -5,9 +5,17 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'dagger.hilt.android.plugin'
 
 android {
-    def versionMajor = 0
-    def versionMinor = 9
-    def versionPatch = 1
+    signingConfigs {
+        release {
+            storeFile file('..\\..\\..\\android_key')
+            keyAlias 'upload'
+            storePassword ANDROID_STORE_PASSWORD
+            keyPassword ANDROID_KEY_PASSWORD
+        }
+    }
+    def versionMajor = 1
+    def versionMinor = 0
+    def versionPatch = 0
 
     compileSdkVersion 30
     buildToolsVersion "30.0.2"
@@ -38,6 +46,7 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 
