@@ -31,7 +31,6 @@ import com.tverona.scpanywhere.viewmodels.*
 import com.tverona.scpanywhere.zipresource.ZipResourceFile
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -76,41 +75,33 @@ class WebViewFragment : Fragment(), View.OnClickListener {
     private val scpDataItemViewModel: ScpDataViewModel by activityViewModels()
     private val webDataViewModel: WebDataViewModel by activityViewModels()
     private val textToSpeechViewModel: TextToSpeechViewModel by activityViewModels()
-    private lateinit var textToSpeechContentViewModel: TextToSpeechContentViewModel
+    private lateinit var webviewContentViewModel: TextToSpeechContentViewModel
 
     // Current url & title
     private var currentUrlTitle = MutableLiveData<UrlTitle>()
 
+    // Used to monitor read time
+    private lateinit var monitorTimer : MonitorTimer
+
     private lateinit var sharedPreferences: SharedPreferences
-
-    // Reading timer
-    private var readTimer = MutableLiveData<ReadTimer>()
-
-    private enum class ReadTimerAction {
-        START,
-        PULSE,
-        STOP,
-    }
-
-    private data class ReadTimer(val action: ReadTimerAction, val url: String?)
 
     class UrlTitle(var url: String, var title: String, var subTitle: String?)
 
     class TextToSpeechContentViewModel : ViewModel() {
-        val textToSpeechContent = LiveEvent<String?>()
+        val content = LiveEvent<String?>()
     }
 
     /**
      * Javascript callback, used to get page content when text-to-speech is turned on
      */
-    private class JavaScriptInterface(val textToSpeechContentViewModel: TextToSpeechContentViewModel) {
+    private class JavaScriptInterface(val webviewContentViewModel: TextToSpeechContentViewModel) {
         @JavascriptInterface
         fun handleHtml(html: String?) {
             val doc = Jsoup.parse(html)
             doc.select("div.footer-wikiwalk-nav").remove()
             doc.select("div.page-tags").remove()
             val content = doc.wholeText()
-            textToSpeechContentViewModel.textToSpeechContent.postValue(content)
+            webviewContentViewModel.content.postValue(content)
         }
     }
 
@@ -126,18 +117,16 @@ class WebViewFragment : Fragment(), View.OnClickListener {
         val offlineDataViewModel: OfflineDataViewModel by activityViewModels()
         val cssOverrideModel: CssOverrideViewModel by activityViewModels()
 
-        // Start to monitor read time
-        monitorReadTime()
-
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+        monitorTimer = MonitorTimer(viewLifecycleOwner)
 
-        textToSpeechContentViewModel =
+        webviewContentViewModel =
             ViewModelProvider(this).get(TextToSpeechContentViewModel::class.java)
 
         webViewInitialized = false
         webView = root.findViewById(R.id.webview)
         webView.addJavascriptInterface(
-            JavaScriptInterface(textToSpeechContentViewModel),
+            JavaScriptInterface(webviewContentViewModel),
             "HtmlHandler"
         )
 
@@ -205,7 +194,7 @@ class WebViewFragment : Fragment(), View.OnClickListener {
     /**
      * Call into javascript injection to get content for text-to-speech
      */
-    private fun getContentForSpeech() {
+    private fun getWebViewContent() {
         webView.evaluateJavascript(
             "javascript:window.HtmlHandler.handleHtml" +
                     "('<html>'+document.getElementsByTagName('body')[0].outerHTML+'</html>');"
@@ -263,6 +252,10 @@ class WebViewFragment : Fragment(), View.OnClickListener {
     override fun onResume() {
         logv("onResume")
         fragmentState = FragmentState.RESUMED
+
+        currentUrlTitle.observeOnce(viewLifecycleOwner) { urlTitle ->
+            startReadTimer(urlTitle.url)
+        }
         super.onResume()
     }
 
@@ -271,7 +264,7 @@ class WebViewFragment : Fragment(), View.OnClickListener {
         fragmentState = FragmentState.PAUSED
         webViewBundle = Bundle()
         webView.saveState(webViewBundle!!)
-        readTimer.value = ReadTimer(ReadTimerAction.STOP, null)
+        monitorTimer.stop()
         super.onPause()
     }
 
@@ -475,8 +468,8 @@ class WebViewFragment : Fragment(), View.OnClickListener {
         isSpeaking = true
         requireActivity().invalidateOptionsMenu()
 
-        getContentForSpeech()
-        textToSpeechContentViewModel.textToSpeechContent.observeOnce(viewLifecycleOwner) {
+        getWebViewContent()
+        webviewContentViewModel.content.observeOnce(viewLifecycleOwner) {
             if (null != it) {
                 speak(it)
             }
@@ -730,15 +723,12 @@ class WebViewFragment : Fragment(), View.OnClickListener {
                 super.onPageStarted(view, url, favicon)
                 clearTitle(getString(R.string.loading))
                 stopSpeak(resetUtteranceId = true)
-                readTimer.value = ReadTimer(ReadTimerAction.STOP, null)
+                monitorTimer.stop()
             }
 
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
-                val normalizedUrl = RegexUtils.normalizeUrl(requireContext(), url)
-                if (normalizedUrl.startsWith(getString(R.string.base_path))) {
-                    readTimer.value = ReadTimer(ReadTimerAction.START, url)
-                }
+                startReadTimer(url)
 
                 // onPageFinished callback can be called after view has already been destroyed.
                 // Check for this here.
@@ -815,46 +805,17 @@ class WebViewFragment : Fragment(), View.OnClickListener {
     }
 
     /**
-     * Monitor read time, periodically persisting to disk
+     * Start read timer
      */
-    private fun monitorReadTime() {
-        // Background coroutine to periodically pulse the read timer
-        viewLifecycleOwner.lifecycleScope.launch {
-            while (true) {
-                delay(60000L)
-                readTimer.value = ReadTimer(ReadTimerAction.PULSE, null)
-            }
-        }
-
-        var lastUrl: String? = null
-        val stopWatch = StopWatch()
-
-        // Observe the read timer:
-        // On start, save off the url & start the stop watch.
-        // On pulse, persist current elapsed timed & reset the stop watch.
-        // On stop, persist current elapsed time & stop the stop watch.
-        readTimer.observe(viewLifecycleOwner) {
-            when (it.action) {
-                ReadTimerAction.START -> {
-                    stopWatch.start()
-                    lastUrl = it.url
+    private fun startReadTimer(url: String) {
+        val normalizedUrl = RegexUtils.normalizeUrl(requireContext(), url)
+        if (normalizedUrl.startsWith(getString(R.string.base_path))) {
+            monitorTimer.start(url, onElapsed = { url, elapsedSecs ->
+                scpDataItemViewModel.viewModelScope.launch(Dispatchers.IO) {
+                    val totalSecs = scpDataItemViewModel.addReadTime(url, elapsedSecs)
+                    logv("Total secs (read time) for $url: $totalSecs; elapsed: $elapsedSecs")
                 }
-                ReadTimerAction.PULSE -> {
-                    val elapsedSecs = stopWatch.stop() / 1000
-                    stopWatch.start()
-
-                    if (lastUrl != null) {
-                        scpDataItemViewModel.addReadTime(lastUrl!!, elapsedSecs)
-                    }
-                }
-                ReadTimerAction.STOP -> {
-                    val elapsedSecs = stopWatch.stop() / 1000
-                    if (lastUrl != null) {
-                        scpDataItemViewModel.addReadTime(lastUrl!!, elapsedSecs)
-                    }
-                    lastUrl = null
-                }
-            }
+            })
         }
     }
 
@@ -868,7 +829,10 @@ class WebViewFragment : Fragment(), View.OnClickListener {
         }
 
         // If user doesn't want to be bothered by this, ignore
-        val ignoreStaleWebView = sharedPreferences.getBoolean(getString(R.string.upgrade_stale_webview_checked_key), false)
+        val ignoreStaleWebView = sharedPreferences.getBoolean(
+            getString(R.string.upgrade_stale_webview_checked_key),
+            false
+        )
         if (ignoreStaleWebView) {
             return false
         }

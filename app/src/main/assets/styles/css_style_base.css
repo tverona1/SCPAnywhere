@@ -40,6 +40,14 @@ div.rimg, div.limg, div.block-right, div.block-left, .image-container, .scp-imag
     padding: 0px !important;
 }
 
+.content-panel.standalone {
+    width: auto !important;
+}
+
 .anom-bar-container {
     word-break: normal;
+}
+
+.floatright {
+    float: unset;
 }

@@ -8,6 +8,6 @@ import javax.inject.Inject
  */
 class StatsRepository @Inject constructor(private val statsDao: StatsDao) {
     val totalReadTimeSecs = statsDao.getTotalReadTimeSecs()
-    suspend fun addReadTime(url: String, readTimeSecs: Long) =
+    suspend fun addReadTime(url: String, readTimeSecs: Long) : Long =
         statsDao.addReadTime(url, readTimeSecs)
 }

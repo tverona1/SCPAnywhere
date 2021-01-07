@@ -376,10 +376,8 @@ class ScpDataViewModel @ViewModelInject constructor(
         }
     }
 
-    fun addReadTime(url: String, readTimeSecs: Long) = viewModelScope.launch {
-        withContext(Dispatchers.IO) {
-            statsRepository.addReadTime(url, readTimeSecs)
-        }
+    suspend fun addReadTime(url: String, readTimeSecs: Long) : Long = withContext(Dispatchers.IO)  {
+        return@withContext statsRepository.addReadTime(url, readTimeSecs)
     }
 
     private fun onBookmarkClickEntry(urlEntryClickable: UrlEntryClickable) = viewModelScope.launch {

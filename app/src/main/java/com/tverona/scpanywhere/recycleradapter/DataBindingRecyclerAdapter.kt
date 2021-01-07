@@ -65,7 +65,9 @@ class DataBindingRecyclerAdapter : ListAdapter<RecyclerItem, BindingViewHolder>(
                 charSequence: CharSequence,
                 filterResults: FilterResults
             ) {
-                submitList(filterResults.values as List<RecyclerItem>)
+                if (filterResults.values != null) {
+                    submitList(filterResults.values as List<RecyclerItem>)
+                }
             }
         }
     }

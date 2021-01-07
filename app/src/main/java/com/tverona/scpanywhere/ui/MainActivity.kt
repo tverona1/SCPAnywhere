@@ -442,14 +442,16 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         return when (item.itemId) {
             R.id.random -> {
                 scpDataViewModel.allScpEntries.observeOnce(this) {
-                    val entry = it.random().data as UrlEntryClickable
-                    webDataViewModel.url.value = entry.urlEntry.url
+                    if (it.isNotEmpty()) {
+                        val entry = it.random().data as UrlEntryClickable
+                        webDataViewModel.url.value = entry.urlEntry.url
 
-                    val webViewFragment = getVisibleWebViewFragment()
-                    if (webViewFragment == null) {
-                        navController.navigate(R.id.nav_home)
+                        val webViewFragment = getVisibleWebViewFragment()
+                        if (webViewFragment == null) {
+                            navController.navigate(R.id.nav_home)
+                        }
+                        drawerLayout.closeDrawer(GravityCompat.START)
                     }
-                    drawerLayout.closeDrawer(GravityCompat.START)
                 }
                 true
             }
