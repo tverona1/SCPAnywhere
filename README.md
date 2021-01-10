@@ -17,7 +17,7 @@ Read about anomalous and mysterious events, locations and beings from the SCP Fo
 * Share articles with others
 * See your reading statistics, such as total reading time
 * Listen to articles with text-to-speech
-* Mark articles as auto-read
+* Automatically mark articles as read
 * Content options like auto-expanding tabs and collapsible blocks
 * Export and import your read and favorite lists
 * Ad free!
