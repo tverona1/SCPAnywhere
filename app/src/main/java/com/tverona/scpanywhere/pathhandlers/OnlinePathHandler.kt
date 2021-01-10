@@ -12,13 +12,15 @@ import com.tverona.scpanywhere.utils.logw
 import com.tverona.scpanywhere.viewmodels.UrlEntry
 import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
+import java.util.*
 
 /**
  * Online path handler is responsible for downloading pages from scp site in online mode
  */
 class OnlinePathHandler(
     private val context: Context,
-    private val urlListByUrl: Map<String, UrlEntry>
+    private val urlListByUrl: Map<String, UrlEntry>,
+    private val contentOptions: ContentOptions
 ) : WebViewAssetLoader.PathHandler {
 
     private val scpWikiRegEx = Regex("""^http[s]?://(?:www\.)?scp-wiki\.net/""")
@@ -142,14 +144,22 @@ class OnlinePathHandler(
                                 elem.attr("href").removePrefix("/scp-").toIntOrNull()
                             if (null != scpNum && scpNum < curScpNum && null != scpEntry.prev) {
                                 elem.attr("href", "/${scpEntry.prev!!.name}")
-                                elem.text(scpEntry.prev!!.name!!.toUpperCase())
+                                elem.text(scpEntry.prev!!.name!!.toUpperCase(Locale.ROOT))
                             } else if (null != scpNum && scpNum > curScpNum && null != scpEntry.next) {
                                 elem.attr("href", "/${scpEntry.next!!.name}")
-                                elem.text(scpEntry.next!!.name!!.toUpperCase())
+                                elem.text(scpEntry.next!!.name!!.toUpperCase(Locale.ROOT))
                             }
                         }
                     }
                 }
+            }
+
+            if (contentOptions.expandTabs) {
+                ContentOptions.expandTabs(doc)
+            }
+
+            if (contentOptions.expandBlocks) {
+                ContentOptions.expandBlocks(doc)
             }
 
             return WebResourceResponse("text/html", "UTF-8", doc.html().byteInputStream())

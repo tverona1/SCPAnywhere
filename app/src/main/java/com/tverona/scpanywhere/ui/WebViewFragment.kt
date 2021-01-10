@@ -37,7 +37,6 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import javax.inject.Inject
 
-
 /**
  * Fragment to handle web view
  */
@@ -75,26 +74,35 @@ class WebViewFragment : Fragment(), View.OnClickListener {
     private val scpDataItemViewModel: ScpDataViewModel by activityViewModels()
     private val webDataViewModel: WebDataViewModel by activityViewModels()
     private val textToSpeechViewModel: TextToSpeechViewModel by activityViewModels()
-    private lateinit var webviewContentViewModel: TextToSpeechContentViewModel
+    private lateinit var webviewContentViewModel: WebViewContentViewModel
 
     // Current url & title
     private var currentUrlTitle = MutableLiveData<UrlTitle>()
 
     // Used to monitor read time
-    private lateinit var monitorTimer : MonitorTimer
+    private lateinit var monitorTimer: MonitorTimer
 
     private lateinit var sharedPreferences: SharedPreferences
 
+    // Helper utility to auto mark page as read
+    private lateinit var autoMarkReadHelper: AutoMarkReadHelper
+
+    // Current webview zoom scale
+    private var zoomScale: Float = 1.0f
+
+    // Content options
+    private lateinit var contentOptions: ContentOptions
+
     class UrlTitle(var url: String, var title: String, var subTitle: String?)
 
-    class TextToSpeechContentViewModel : ViewModel() {
+    class WebViewContentViewModel : ViewModel() {
         val content = LiveEvent<String?>()
     }
 
     /**
      * Javascript callback, used to get page content when text-to-speech is turned on
      */
-    private class JavaScriptInterface(val webviewContentViewModel: TextToSpeechContentViewModel) {
+    private class JavaScriptInterface(val webviewContentViewModel: WebViewContentViewModel) {
         @JavascriptInterface
         fun handleHtml(html: String?) {
             val doc = Jsoup.parse(html)
@@ -120,8 +128,25 @@ class WebViewFragment : Fragment(), View.OnClickListener {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
         monitorTimer = MonitorTimer(viewLifecycleOwner)
 
+        // Get content options
+        contentOptions = ContentOptions(
+            expandBlocks = sharedPreferences.getBoolean(
+                getString(R.string.expand_blocks_key),
+                false
+            ), expandTabs = sharedPreferences.getBoolean(
+                getString(R.string.expand_tabs_key),
+                false
+            )
+        )
+
         webviewContentViewModel =
-            ViewModelProvider(this).get(TextToSpeechContentViewModel::class.java)
+            ViewModelProvider(this).get(WebViewContentViewModel::class.java)
+
+        autoMarkReadHelper = AutoMarkReadHelper(requireContext()) {
+            if (fragmentState != FragmentState.DESTROYED) {
+                updateBookmarkEntry(it, isReadEntry = true, toggle = false)
+            }
+        }
 
         webViewInitialized = false
         webView = root.findViewById(R.id.webview)
@@ -129,6 +154,10 @@ class WebViewFragment : Fragment(), View.OnClickListener {
             JavaScriptInterface(webviewContentViewModel),
             "HtmlHandler"
         )
+
+        // Enable pinch-to-zoom
+        webView.settings.builtInZoomControls = true
+        webView.settings.displayZoomControls = false
 
         if (null == isOfflineMode) {
             isOfflineMode = webDataViewModel.offlineMode.value
@@ -290,6 +319,8 @@ class WebViewFragment : Fragment(), View.OnClickListener {
 
         // Listen for url & title (populated after page is loaded) and then enable various menu options
         currentUrlTitle.observe(viewLifecycleOwner) { urlTitle ->
+            // Set url title on auto mark read helper
+            autoMarkReadHelper.onUrlTitle(urlTitle)
 
             // Enable text to speech button when text to speech provider is initialized
             textToSpeechViewModel.initialized.observe(viewLifecycleOwner) {
@@ -382,30 +413,7 @@ class WebViewFragment : Fragment(), View.OnClickListener {
             R.id.read -> {
                 // Update bookmark entry
                 currentUrlTitle.observeOnce(viewLifecycleOwner) { urlTitle ->
-                    val url = RegexUtils.normalizeUrl(requireContext(), urlTitle.url)
-                    scpDataItemViewModel.getBookmarkByUrl(url).observeOnce(viewLifecycleOwner) {
-                        var title = urlTitle.title
-                        if (urlTitle.subTitle != null) {
-                            title += " - ${urlTitle.subTitle}"
-                        }
-                        var bookmarkEntry = it
-                        if (null == bookmarkEntry) {
-                            bookmarkEntry = BookmarkEntry(
-                                url = url,
-                                title = title,
-                                favorite = false,
-                                read = false
-                            )
-                        }
-                        if (item.itemId == R.id.favorite) {
-                            bookmarkEntry.favorite = !bookmarkEntry.favorite
-                        }
-                        if (item.itemId == R.id.read) {
-                            bookmarkEntry.read = !bookmarkEntry.read
-                        }
-                        logv("dao: updating entry: $bookmarkEntry")
-                        scpDataItemViewModel.updateBookmarkEntry(bookmarkEntry)
-                    }
+                    updateBookmarkEntry(urlTitle, item.itemId == R.id.read, toggle = true)
                 }
                 true
             }
@@ -417,6 +425,7 @@ class WebViewFragment : Fragment(), View.OnClickListener {
                         if (it.containsKey(url)) {
                             val nextEntry = it[url]!!.next
                             if (null != nextEntry) {
+                                autoMarkReadHelper.onNextItem()
                                 webDataViewModel.url.value = nextEntry.url
                             }
                         }
@@ -454,6 +463,36 @@ class WebViewFragment : Fragment(), View.OnClickListener {
             }
 
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    /**
+     * Update bookmark entry for [urlTitle] with either read (if [isReadEntry] is true) or favorite. Value will be flipped in [toggle] or else set to true.
+     */
+    private fun updateBookmarkEntry(urlTitle: UrlTitle, isReadEntry: Boolean, toggle: Boolean) {
+        // Update bookmark entry
+        val url = RegexUtils.normalizeUrl(requireContext(), urlTitle.url)
+        scpDataItemViewModel.getBookmarkByUrl(url).observeOnce(viewLifecycleOwner) {
+            var title = urlTitle.title
+            if (urlTitle.subTitle != null) {
+                title += " - ${urlTitle.subTitle}"
+            }
+            var bookmarkEntry = it
+            if (null == bookmarkEntry) {
+                bookmarkEntry = BookmarkEntry(
+                    url = url,
+                    title = title,
+                    favorite = false,
+                    read = false
+                )
+            }
+            if (isReadEntry) {
+                bookmarkEntry.read = if (toggle) !bookmarkEntry.read else true
+            } else {
+                bookmarkEntry.favorite = if (toggle) !bookmarkEntry.favorite else true
+            }
+            logv("dao: updating entry: $bookmarkEntry")
+            scpDataItemViewModel.updateBookmarkEntry(bookmarkEntry)
         }
     }
 
@@ -658,7 +697,7 @@ class WebViewFragment : Fragment(), View.OnClickListener {
             .addPathHandler(
                 WebViewAssetLoader.DEFAULT_DOMAIN,
                 "/",
-                ZipStoragePathHandler(zipResourceFile)
+                ZipStoragePathHandler(zipResourceFile, contentOptions)
             )
             .build()
 
@@ -677,7 +716,7 @@ class WebViewFragment : Fragment(), View.OnClickListener {
             .addPathHandler(
                 getString(R.string.base_path),
                 "/",
-                OnlinePathHandler(requireContext(), urlListByUrl),
+                OnlinePathHandler(requireContext(), urlListByUrl, contentOptions),
                 handleFullPath = true
             )
             .build()
@@ -721,8 +760,21 @@ class WebViewFragment : Fragment(), View.OnClickListener {
 
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
+
+                logv("onPageStarted")
+
+                // This is required to zoom back out after loading page
+                webView.settings.loadWithOverviewMode = true
+                webView.settings.loadWithOverviewMode = false
+
+                // Handle auto-mark as read on next item
+                if (null != url) {
+                    handleAutoMarkReadOnNextItem(url)
+                }
+
                 clearTitle(getString(R.string.loading))
                 stopSpeak(resetUtteranceId = true)
+                autoMarkReadHelper.onNewPage()
                 monitorTimer.stop()
             }
 
@@ -745,6 +797,12 @@ class WebViewFragment : Fragment(), View.OnClickListener {
 
                 // Update title
                 updateTitle(view, url)
+
+                // Handle auto mark read when content fits in view
+                handleAutoMarkReadContentFitsInView()
+
+                // Handle auto mark read for estimated read time
+                handleAutoMarkReadEstimatedReadTime()
             }
 
             override fun onReceivedError(
@@ -762,6 +820,30 @@ class WebViewFragment : Fragment(), View.OnClickListener {
             ): Boolean {
                 loge("onRenderProcessGone: $detail")
                 return super.onRenderProcessGone(view, detail)
+            }
+
+            override fun onScaleChanged(view: WebView?, oldScale: Float, newScale: Float) {
+                // Track current zoom scale so we can properly calculate when scrolling to bottom of page
+                zoomScale = newScale
+                super.onScaleChanged(view, oldScale, newScale)
+            }
+        }
+
+        webView.setOnScrollChangeListener { view: View, scrollX: Int, scrollY: Int, oldScrollx: Int, oldScrollY: Int ->
+            // Handle auto mark read when scroll to bottom is enabled
+            if (autoMarkReadHelper.isScrollToBottomEnabled()) {
+                val webView = view as WebView
+                val contentHeight = webView.contentHeight * zoomScale
+                val total =
+                    Math.max(
+                        contentHeight * resources.displayMetrics.density - webView.getHeight(),
+                        0f
+                    )
+
+                if (scrollY >= total - 5) {
+                    // Scroll reached bottom
+                    autoMarkReadHelper.onScrolledToBottom()
+                }
             }
         }
 
@@ -791,6 +873,7 @@ class WebViewFragment : Fragment(), View.OnClickListener {
                     }
 
                     logv("Loading url $fullUrl, offline mode: ${webDataViewModel.offlineMode.value}")
+
                     webView.loadUrl(fullUrl)
                 }
 
@@ -805,15 +888,98 @@ class WebViewFragment : Fragment(), View.OnClickListener {
     }
 
     /**
+     * Handle auto mark as read when content fits in view
+     */
+    private fun handleAutoMarkReadContentFitsInView() {
+        webView.evaluateJavascript("""window.innerHeight + window.scrollY > document.body.scrollHeight""") {
+            if (it.toBoolean()) {
+                autoMarkReadHelper.onScrolledToBottom()
+            }
+        }
+    }
+
+    /**
+     * Handle auto mark as read time for estimated read time
+     */
+    private fun handleAutoMarkReadEstimatedReadTime() {
+        if (autoMarkReadHelper.isEstimatedReadTimeEnabled()) {
+            getWebViewContent()
+            webviewContentViewModel.content.observeOnce(viewLifecycleOwner) {
+                if (null != it) {
+                    val wordCount =
+                        Regex("""(\s+|(\r\n|\r|\n))""").findAll(it.trim()).count() + 1
+
+                    // Estimated read time is based on 180 words / min (average read time for online content)
+                    val readEstimateSecs = wordCount / 3L
+                    logv("Words: $wordCount, read estimate: $readEstimateSecs secs")
+                    autoMarkReadHelper.setEstimatedReadTime(readEstimateSecs)
+                }
+            }
+        }
+    }
+
+    /**
+     * Handle auto mark as read on next / prev item
+     */
+    private fun handleAutoMarkReadOnNextItem(url: String) {
+        if (autoMarkReadHelper.isOnNextItemEnabled() && currentUrlTitle.value != null && null != currentUrlTitle.value?.url) {
+            val normalizedPreviousUrl = RegexUtils.normalizeUrl(
+                requireContext(),
+                currentUrlTitle.value?.url!!
+            )
+            val normalizedCurrentUrl = RegexUtils.normalizeUrl(requireContext(), url)
+
+            scpDataItemViewModel.scpEntriesByUrl.observeOnce(viewLifecycleOwner) {
+                if (it.containsKey(normalizedPreviousUrl)) {
+                    val nextEntry = it[normalizedPreviousUrl]?.next
+                    if (null != nextEntry && nextEntry.url.equals(
+                            normalizedCurrentUrl,
+                            ignoreCase = true
+                        )
+                    ) {
+                        autoMarkReadHelper.onNextItem()
+                    } else {
+                        val prevEntry = it[normalizedPreviousUrl]?.prev
+                        if (null != prevEntry && prevEntry.url.equals(
+                                normalizedCurrentUrl,
+                                ignoreCase = true
+                            )
+                        ) {
+                            autoMarkReadHelper.onNextItem()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Start read timer
      */
-    private fun startReadTimer(url: String) {
-        val normalizedUrl = RegexUtils.normalizeUrl(requireContext(), url)
+    private fun startReadTimer(inputUrl: String) {
+        val normalizedUrl = RegexUtils.normalizeUrl(requireContext(), inputUrl)
         if (normalizedUrl.startsWith(getString(R.string.base_path))) {
-            monitorTimer.start(url, onElapsed = { url, elapsedSecs ->
+            if (autoMarkReadHelper.isReadTimeEnabled() && fragmentState != FragmentState.DESTROYED) {
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                    val stats = scpDataItemViewModel.getReadTimeByUrl(inputUrl).await()
+                    if (null != stats) {
+                        autoMarkReadHelper.onReadTimeElapsed(stats.readTimeSecs)
+                    }
+                }
+            }
+
+            monitorTimer.start(normalizedUrl, onElapsed = { url, elapsedSecs ->
                 scpDataItemViewModel.viewModelScope.launch(Dispatchers.IO) {
                     val totalSecs = scpDataItemViewModel.addReadTime(url, elapsedSecs)
                     logv("Total secs (read time) for $url: $totalSecs; elapsed: $elapsedSecs")
+
+                    withContext(Dispatchers.Main) {
+                        if (fragmentState != FragmentState.DESTROYED) {
+                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                                autoMarkReadHelper.onReadTimeElapsed(totalSecs)
+                            }
+                        }
+                    }
                 }
             })
         }
@@ -822,7 +988,7 @@ class WebViewFragment : Fragment(), View.OnClickListener {
     /**
      * Check if System WebView is stale (only applies to API 23 and below).
      */
-    fun isStaleWebView() : Boolean {
+    fun isStaleWebView(): Boolean {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
             // Android N (API 24) and above already has up-to-date system webview
             return false

@@ -41,7 +41,7 @@
     <string name="check_for_updates">Check for Updates</string>
     <string name="delete">Delete</string>
     <string name="downloaded_data">Downloaded data</string>
-    <string name="read_entries">Read entries</string>
+    <string name="read_entries">Read Entries</string>
     <string name="favorites">Favorites</string>
     <string name="read">Read</string>
     <string name="favorite">Favorite</string>
@@ -149,4 +149,23 @@
     <string name="export_name">Name of export file</string>
     <string name="export_name_hint">Export file name</string>
     <string name="no_updates">No updates available</string>
+    <string name="reading_experience_category">Reading Experience</string>
+    <string name="auto_mark_read_key">auto_mark_read_key</string>
+    <string name="auto_mark_read">Auto mark as read</string>
+    <string name="auto_mark_read_time_key">auto_mark_read_time_key</string>
+    <string name="auto_mark_read_time">Minimum reading time</string>
+
+    <string name="auto_mark_read_off">off</string>
+    <string name="auto_mark_read_scroll_bottom">scroll_bottom</string>
+    <string name="auto_mark_read_next_scp">next_scp</string>
+    <string name="auto_mark_read_scroll_bottom_or_next_scp">scroll_bottom_or_next_scp</string>
+    <string name="auto_mark_read_scroll_bottom_and_next_scp">scroll_bottom_and_next_scp</string>
+    <string name="auto_mark_read_category">Auto Mark As Read</string>
+    <string name="content_options_category">Content Options</string>
+    <string name="expand_tabs_description">If enabled, expand all tabs and displays them in sequence</string>
+    <string name="expand_tabs">Expand Tabs</string>
+    <string name="expand_tabs_key">expand_tabs_key</string>
+    <string name="expand_blocks">Expand Blocks</string>
+    <string name="expand_blocks_key">expand_blocks_key</string>
+    <string name="expand_blocks_description">If enabled, expands all collapsed blocks</string>
 </resources>

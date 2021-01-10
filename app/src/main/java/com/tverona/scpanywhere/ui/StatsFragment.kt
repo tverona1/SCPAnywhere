@@ -45,17 +45,17 @@ class StatsFragment : Fragment() {
                     val readTales =
                         it.filter { scpDataViewModel.taleEntriesByUrl.value?.containsKey((it.data as UrlEntryClickable).urlEntry.url) == true }.size
 
-                    var percentScp = 1.0f
-                    var percentTales = 1.0f
+                    var percentScp = 0f
+                    var percentTales = 0f
                     var totalScp = scpDataViewModel.allScpEntries.value?.size
                     if (totalScp != null && totalScp != 0) {
-                        percentScp = readScp.toFloat() / totalScp
+                        percentScp = readScp.toFloat() / totalScp * 100f
                     } else {
                         totalScp = 0
                     }
                     var totalTales = scpDataViewModel.allTaleEntries.value?.size
                     if (totalTales != null && totalTales != 0) {
-                        percentTales = readTales.toFloat() / totalTales
+                        percentTales = readTales.toFloat() / totalTales * 100f
                     } else {
                         totalTales = 0
                     }

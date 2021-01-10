@@ -51,3 +51,10 @@ div.rimg, div.limg, div.block-right, div.block-left, .image-container, .scp-imag
 .floatright {
     float: unset;
 }
+
+.scpanywhere-tabheader {
+    text-align: center;
+    font-weight: bold;
+    text-decoration: underline;
+    font-size: 120%;
+}

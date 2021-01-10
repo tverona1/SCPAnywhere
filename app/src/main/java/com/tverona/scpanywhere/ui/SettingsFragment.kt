@@ -151,6 +151,22 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 }
             }
         }
+
+        // Set up auto mark read preferences
+        val autoMarkReadPreference =
+            findPreference<ListPreference>(getString(R.string.auto_mark_read_key))
+        val autoMarkReadTimePreference =
+            findPreference<ListPreference>(getString(R.string.auto_mark_read_time_key))
+        autoMarkReadTimePreference?.isEnabled = !sharedPreferences.getString(
+            getString(R.string.auto_mark_read_key),
+            getString(R.string.auto_mark_read_off)
+        ).equals(getString(R.string.auto_mark_read_off))
+        autoMarkReadPreference?.setOnPreferenceChangeListener { _, newValue ->
+            val value = newValue as String
+            autoMarkReadTimePreference?.isEnabled =
+                !value.equals(getString(R.string.auto_mark_read_off))
+            true
+        }
     }
 
     /**
@@ -225,7 +241,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
         speechEnginePreference.entryValues = engines.map { it.name }.toTypedArray()
 
         // Persist default value if needed
-        val persistedSpeechEngine = sharedPreferences.getString(getString(R.string.speech_engine_key), null)
+        val persistedSpeechEngine = sharedPreferences.getString(
+            getString(R.string.speech_engine_key),
+            null
+        )
         if (null == persistedSpeechEngine) {
             with(sharedPreferences.edit()) {
                 putString(getString(R.string.speech_engine_key), textToSpeechProvider.defaultEngine)
@@ -523,7 +542,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 withContext(Dispatchers.Main) {
                     showSnackbar(
                         fragmentView,
-                        R.string.failed_import_data)
+                        R.string.failed_import_data
+                    )
                 }
             }
         }

@@ -102,6 +102,50 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        app:title="@string/auto_mark_read_category"
+        app:iconSpaceReserved="false">
+
+        <ListPreference
+            app:key="@string/auto_mark_read_key"
+            app:entries="@array/auto_mark_read_entries"
+            app:entryValues="@array/auto_mark_read_values"
+            app:defaultValue="@string/auto_mark_read_off"
+            app:title="@string/auto_mark_read"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false"/>
+
+        <ListPreference
+            app:key="@string/auto_mark_read_time_key"
+            app:entries="@array/auto_mark_read_time_entries"
+            app:entryValues="@array/auto_mark_read_time_values"
+            app:defaultValue="-1"
+            app:title="@string/auto_mark_read_time"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/content_options_category"
+        app:iconSpaceReserved="false">
+
+        <CheckBoxPreference
+            app:title="@string/expand_tabs"
+            app:key="@string/expand_tabs_key"
+            app:summary="@string/expand_tabs_description"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"/>
+
+        <CheckBoxPreference
+            app:title="@string/expand_blocks"
+            app:key="@string/expand_blocks_key"
+            app:summary="@string/expand_blocks_description"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
         app:title="@string/import_export_category"
         app:iconSpaceReserved="false">
         <Preference
@@ -118,4 +162,5 @@
             app:iconSpaceReserved="false"
             />
     </PreferenceCategory>
+
 </PreferenceScreen>

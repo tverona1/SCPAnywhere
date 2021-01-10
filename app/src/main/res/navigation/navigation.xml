@@ -27,7 +27,7 @@
 
     <fragment
         android:id="@+id/read_list"
-        android:label="@string/read"
+        android:label="@string/read_entries"
         android:name="com.tverona.scpanywhere.ui.ReadItemFragment">
     </fragment>
 

@@ -88,4 +88,42 @@
         <item>SourceSansPro</item>
     </string-array>
 
+    <!-- Auto mark as read entries / values -->
+    <string-array name="auto_mark_read_entries">
+        <item>Off</item>
+        <item>When scrolling to bottom of article</item>
+        <item>When going to next SCP entry</item>
+        <item>When either scrolling to bottom or going to next SCP entry</item>
+        <item>When both scrolling to bottom and going to next SCP entry</item>
+    </string-array>
+
+    <string-array name="auto_mark_read_values">
+        <item>@string/auto_mark_read_off</item>
+        <item>@string/auto_mark_read_scroll_bottom</item>
+        <item>@string/auto_mark_read_next_scp</item>
+        <item>@string/auto_mark_read_scroll_bottom_or_next_scp</item>
+        <item>@string/auto_mark_read_scroll_bottom_and_next_scp</item>
+    </string-array>
+
+    <!-- Auto mark as read time entries / values -->
+    <string-array name="auto_mark_read_time_entries">
+        <item>No minimum reading time</item>
+        <item>After reading for estimated read time based on article length</item>
+        <item>After reading for at least 1 minute</item>
+        <item>After reading for at least 5 minutes</item>
+        <item>After reading for at least 10 minutes</item>
+        <item>After reading for at least 15 minutes</item>
+        <item>After reading for at least 20 minutes</item>
+    </string-array>
+
+    <string-array name="auto_mark_read_time_values">
+        <item>-1</item>
+        <item>0</item>
+        <item>1</item>
+        <item>5</item>
+        <item>10</item>
+        <item>15</item>
+        <item>20</item>
+    </string-array>
+
 </resources>

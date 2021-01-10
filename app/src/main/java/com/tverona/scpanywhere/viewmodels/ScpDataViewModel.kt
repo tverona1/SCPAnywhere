@@ -10,6 +10,7 @@ import com.squareup.moshi.Moshi
 import com.tverona.scpanywhere.BR
 import com.tverona.scpanywhere.R
 import com.tverona.scpanywhere.database.BookmarkEntry
+import com.tverona.scpanywhere.database.StatEntry
 import com.tverona.scpanywhere.recycleradapter.RecyclerItem
 import com.tverona.scpanywhere.recycleradapter.RecyclerItemFilter
 import com.tverona.scpanywhere.repositories.*
@@ -20,6 +21,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import okio.buffer
+import okio.source
 
 /**
  * View model that represents scp data - scp lists, bookmarks (read / favorite) & stats
@@ -133,14 +136,12 @@ class ScpDataViewModel @ViewModelInject constructor(
         }
 
         try {
-            val json =
-                inputStream.bufferedReader().use {
-                    it.readText()
-                }
-
             val adapter = Moshi.Builder().build().adapter(TalesNum::class.java)
-            val talesNum = adapter.fromJson(json)
-            return talesNum?.talesnum ?: 0
+
+            inputStream.source().buffer().use {
+                val talesNum = adapter.fromJson(it)
+                return talesNum?.talesnum ?: 0
+            }
         } catch (e: Exception) {
             loge("Error processing offline tales num", e)
             return 0
@@ -380,6 +381,8 @@ class ScpDataViewModel @ViewModelInject constructor(
         return@withContext statsRepository.addReadTime(url, readTimeSecs)
     }
 
+    fun getReadTimeByUrl(url: String): LiveData<StatEntry?> = statsRepository.getByUrl(url)
+
     private fun onBookmarkClickEntry(urlEntryClickable: UrlEntryClickable) = viewModelScope.launch {
         withContext(Dispatchers.IO) {
             val bookmarkEntry = BookmarkEntry(
@@ -511,10 +514,8 @@ class UrlEntryClickable(val urlEntry: UrlEntry) : RecyclerItemFilter {
     }
 
     override fun filter(value: String): Boolean {
-        val escapedValue = value.replace("&", "&amp;")
-            .replace("<", "&lt;")
+        val escapedValue = value.replace("<", "&lt;")
             .replace(">", "&gt;")
-            .replace("\"", "&quot;")
         return urlEntry.title.contains(escapedValue, ignoreCase = true)
     }
 }

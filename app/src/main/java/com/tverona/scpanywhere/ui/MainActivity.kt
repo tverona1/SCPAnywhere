@@ -476,6 +476,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
      * Handle back presses
      */
     override fun onBackPressed() {
+        drawerLayout.closeDrawer(GravityCompat.START)
         val webViewFragment = getVisibleWebViewFragment()
         if (webViewFragment != null) {
             if (!webViewFragment.onBackPressed()) {
