@@ -96,9 +96,10 @@ class ApplicationModule {
     @Provides
     @Singleton
     fun providesRatingsDownloader(
-        @ApplicationContext appContext: Context
+        @ApplicationContext appContext: Context,
+        okHttpClient: OkHttpClient
     ): RatingsDownloader {
-        return RatingsDownloader(appContext)
+        return RatingsDownloader(appContext, okHttpClient)
     }
 
     @Provides
