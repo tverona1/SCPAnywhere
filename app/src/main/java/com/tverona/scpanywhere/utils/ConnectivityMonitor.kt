@@ -27,6 +27,24 @@ class ConnectivityMonitor(
         .addTransportType(NetworkCapabilities.TRANSPORT_VPN)
         .build()
 
+
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            super.onAvailable(network)
+            lastInternetConnectionCheck()
+        }
+
+        override fun onLost(network: Network) {
+            super.onLost(network)
+            lastInternetConnectionCheck()
+        }
+
+        private fun lastInternetConnectionCheck() {
+            //connectivityManager.activeNetworkInfo?.isConnectedOrConnecting == true
+            toggleConnectionState()
+        }
+    }
+
     init {
         lifecycleOwner.lifecycle.addObserver(this)
     }
@@ -62,23 +80,6 @@ class ConnectivityMonitor(
             actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
             actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
             else -> false
-        }
-    }
-
-    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: Network) {
-            super.onAvailable(network)
-            lastInternetConnectionCheck()
-        }
-
-        override fun onLost(network: Network) {
-            super.onLost(network)
-            lastInternetConnectionCheck()
-        }
-
-        private fun lastInternetConnectionCheck() {
-            //connectivityManager.activeNetworkInfo?.isConnectedOrConnecting == true
-            toggleConnectionState()
         }
     }
 }

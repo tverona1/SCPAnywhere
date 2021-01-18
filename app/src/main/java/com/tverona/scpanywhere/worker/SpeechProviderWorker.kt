@@ -3,7 +3,9 @@ package com.tverona.scpanywhere.worker
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.concurrent.futures.CallbackToFutureAdapter
@@ -15,6 +17,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.tverona.scpanywhere.R
 import com.tverona.scpanywhere.utils.*
 import com.tverona.scpanywhere.repositories.SpeechContent
+import com.tverona.scpanywhere.ui.MainActivity
 import kotlinx.coroutines.*
 
 class SpeechProviderWorker @WorkerInject constructor(
@@ -119,6 +122,7 @@ class SpeechProviderWorker @WorkerInject constructor(
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle(title)
+            .setContentIntent(PendingIntent.getActivity(context, 0 , Intent(context, MainActivity::class.java) , 0 ))
             .setTicker(title)
             .setSmallIcon(R.drawable.ic_stat_name)
             .setOngoing(true)

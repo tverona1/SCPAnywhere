@@ -3,8 +3,10 @@ package com.tverona.scpanywhere.worker
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
+import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
@@ -13,6 +15,7 @@ import androidx.hilt.work.WorkerInject
 import androidx.work.*
 import com.tverona.scpanywhere.R
 import com.tverona.scpanywhere.repositories.OfflineDataRepository
+import com.tverona.scpanywhere.ui.MainActivity
 import com.tverona.scpanywhere.utils.*
 import kotlinx.coroutines.*
 import java.io.File
@@ -149,6 +152,7 @@ class ChangeStorageWorker @WorkerInject constructor(
 
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle(title)
+            .setContentIntent(PendingIntent.getActivity(context, 0 , Intent(context, MainActivity::class.java) , 0 ))
             .setTicker(title)
             .setSmallIcon(R.drawable.ic_stat_name)
             .setProgress(totalFiles, currentFile, false)
