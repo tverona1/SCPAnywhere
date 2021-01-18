@@ -54,18 +54,8 @@ class OfflineDataViewModel @ViewModelInject constructor(
         }
 
     // Required space
-
-
-    private val _localItemClick = MutableLiveData<LocalAssetMetadata>()
-
-    private var downloadJob: Job? = null
-    private var changeStorageJob: Job? = null
-
-    val isDownloading: Boolean
-        get() = downloadJob?.isActive == true
-
-    private val _isDownloadingObservable = MutableLiveData<Boolean>(false)
-    val isDownloadingObservable : LiveData<Boolean> = _isDownloadingObservable
+    val requiredSpaceString: LiveData<String> =
+        Transformations.map(offlineDataRepository.requiredSpace) {
             "${context.getString(R.string.space_needed)}: ${StringFormatter.fileSize(it)}"
         }
 
@@ -89,63 +79,11 @@ class OfflineDataViewModel @ViewModelInject constructor(
     /**
      * Cancel changing storage location
      */
-                                .map { it.asset }
-                        )
-                        processDownloadableAssetList(tempDownloadableAssets)
-
-                        // Reload offline repository
-                        logv("Loading offline data after download")
-                        offlineDataRepository.load()
-                    } catch (e: Exception) {
-                        loge("Failed to download asset: ${it.asset.name}")
-                        operationState.postError("Error downloading ${it.asset.name}", e)
-                    }
-                }
-            }
-        }
-    }
+    fun cancelChangeStorage() = offlineDataRepository.cancelChangeStorage()
 
     /**
-     * Delete files that exist locally but not in latest release (i.e. stale files)
+     * Change storage location
      */
-    private suspend fun deleteLocalOnlyFiles() {
-        withContext(Dispatchers.IO) {
-            localFilesToDelete.forEach {
-                deleteFile(it)
-            }
-            localFilesToDelete.clear()
-        }
-    }
-
-    /**
-     * Download asset represented by [downloadAssetMetadataObservable]
-     */
-    @ExperimentalCoroutinesApi
-    private suspend fun downloadAsset(downloadAssetMetadataObservable: DownloadAssetMetadataObservable) {
-        return withContext(Dispatchers.IO) {
-
-            val storageDir = currentExternalStorage.await().path
-            val file =
-                File(storageDir + File.separator + downloadAssetMetadataObservable.asset.name + OfflineDataRepository.tmpExt)
-            logv("Downloading ${downloadAssetMetadataObservable.asset.url} to file ${file.absolutePath}")
-
-            try {
-                var isDownloading: Boolean
-                synchronized(downloadAssetMetadataObservable) {
-                    // Ensure that we're not downloading the same asset simultaneously
-                    isDownloading = downloadAssetMetadataObservable.isDownloading.get()!!
-                    if (!isDownloading) {
-                        downloadAssetMetadataObservable.isDownloading.set(true)
-                    }
-                }
-
-                if (!isDownloading) {
-                    // Delete destination first to save storage space, unless it's the base asset;
-                    // then keep it since it's relatively small to allow continuing to browse in the background
-                    val fileDest =
-                        File(storageDir + File.separator + downloadAssetMetadataObservable.asset.name)
-                    if (!downloadAssetMetadataObservable.asset.name.contains(
-                            baseAssetName,
     suspend fun changeStorageLocation(sourcePath: String, destPath: String) =
         offlineDataRepository.changeStorageLocation(sourcePath, destPath)
 
