@@ -150,7 +150,7 @@ class ChangeStorageWorker @WorkerInject constructor(
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle(title)
             .setTicker(title)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_stat_name)
             .setProgress(totalFiles, currentFile, false)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
