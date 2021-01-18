@@ -1,5 +1,6 @@
 package com.tverona.scpanywhere.utils
 
+import android.os.Build
 import kotlinx.coroutines.*
 import okio.Buffer
 import okio.buffer
@@ -7,7 +8,10 @@ import okio.sink
 import okio.source
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
 import kotlin.coroutines.resumeWithException
+import kotlin.math.abs
 
 /**
  * Extension method to coroutine copy to [output] file with optional [bufferSize] buffer size, [blockingDispatcher] blocking dispatcher (default is Dispatchers.IO)
@@ -62,11 +66,22 @@ suspend fun File.copyTo(
 }
 
 /**
- * Rename extension method Truncate and delete
+ * Rename extension method Truncate, delete and rename
  */
 fun File.rename(dest: File): Boolean {
     dest.truncateAndDelete()
-    return this.renameTo(dest)
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        return try {
+            Files.move(toPath(), dest.toPath())
+            true
+        } catch (e: Exception) {
+            loge("Error moving file $absolutePath", e)
+            false
+        }
+    } else {
+        return this.renameTo(dest)
+    }
 }
 
 fun File.truncateAndDelete(): Boolean {
@@ -76,8 +91,27 @@ fun File.truncateAndDelete(): Boolean {
             // For some reason, volume's usable space does not update just by deleting, so truncate file first.
             writeText("")
         } catch (e: Exception) {
+            loge("Can't truncate file $absolutePath", e)
         }
-        return delete()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return try {
+                Files.delete(toPath())
+                logv("Deleted ${absolutePath}")
+                true
+            } catch (e: Exception) {
+                loge("Error deleting file $absolutePath", e)
+                false
+            }
+        } else {
+            val ret = delete()
+            if (!ret) {
+                loge("Failed to delete file $absolutePath")
+            } else {
+                logv("Deleted ${absolutePath}")
+            }
+            return ret
+        }
     }
-    return false
+    return true
 }

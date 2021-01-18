@@ -8,6 +8,8 @@ import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.speech.tts.Voice
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.tverona.scpanywhere.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.*
@@ -36,8 +38,8 @@ class TextToSpeechProvider constructor(
         fun onError(errorMessage: String)
     }
 
-    var initialized = false
-        private set
+    private val _isInitialized = MutableLiveData<Boolean>(false)
+    val isInitialized: LiveData<Boolean> = _isInitialized
 
     private var tts: TextToSpeech? = null
 
@@ -49,6 +51,8 @@ class TextToSpeechProvider constructor(
         get() {
             return "$currentUtteranceId"
         }
+
+    private val currentSpeechText: String? = null
 
     private fun getUtteranceIdFromString(utteranceId: String?): Int {
         return utteranceId?.toIntOrNull() ?: 0
@@ -175,7 +179,7 @@ class TextToSpeechProvider constructor(
                     }
                 }
 
-                initialized = true
+                _isInitialized.postValue(true)
                 onInitStatus?.onSuccess()
                 logv("Successfully initialized text to speech provider")
             }
@@ -187,7 +191,7 @@ class TextToSpeechProvider constructor(
             stop()
             tts!!.shutdown()
             tts = null
-            initialized = false
+            _isInitialized.postValue(false)
             currentEngineName = null
         }
     }
@@ -277,7 +281,7 @@ class TextToSpeechProvider constructor(
         logv("Speak starting")
         var isError = false
 
-        if (!initialized || null == tts) {
+        if (isInitialized.value == false || null == tts) {
             speechProgress?.onError(0)
             return
         }

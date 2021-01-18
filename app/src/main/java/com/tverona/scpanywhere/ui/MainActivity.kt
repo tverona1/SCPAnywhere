@@ -49,7 +49,6 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
     private val webDataViewModel: WebDataViewModel by viewModels()
     private val scpDataViewModel: ScpDataViewModel by viewModels()
     private val offlineDataViewModel: OfflineDataViewModel by viewModels()
-    private val textToSpeechViewModel: TextToSpeechViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         logv("onCreate")
@@ -166,9 +165,6 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
     override fun onDestroy() {
         logv("OnDestroy")
         super.onDestroy()
-
-        // Shut down text to speech provider
-        textToSpeechProvider.shutdown()
 
         // Unregister shared preference listener
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(sharedPreferenceListener)
@@ -507,28 +503,32 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
     /**
      * Initialize text to speech provider
      */
-    private fun initializeTextToSpeechProvider(enginePackageName: String? = null) {
-        var engine = enginePackageName
-        if (null == engine) {
-            engine = sharedPreferences.getString(
-                getString(R.string.speech_engine_key),
-                if (textToSpeechProvider.initialized) textToSpeechProvider.defaultEngine else null
-            )
-        }
+    private fun initializeTextToSpeechProvider(enginePackageName: String? = null, forceInitialize: Boolean = false) {
+        textToSpeechProvider.isInitialized.observeOnce(this) { isInitialized ->
+            if (!forceInitialize && isInitialized) {
+                return@observeOnce
+            }
 
-        lifecycleScope.launch {
-            textToSpeechProvider.initialize(engine, object : TextToSpeechProvider.OnInitStatus {
-                override fun onSuccess() {
-                    setTextToSpeechVoice()
-                    setTextToSpeechPitch()
-                    setTextToSpeechRate()
-                    textToSpeechViewModel.initialized.postValue(true)
-                }
+            var engine = enginePackageName
+            if (null == engine) {
+                engine = sharedPreferences.getString(
+                    getString(R.string.speech_engine_key),
+                    if (isInitialized) textToSpeechProvider.defaultEngine else null
+                )
+            }
 
-                override fun onError(errorMessage: String) {
-                    textToSpeechViewModel.initialized.postValue(false)
-                }
-            })
+            lifecycleScope.launch {
+                textToSpeechProvider.initialize(engine, object : TextToSpeechProvider.OnInitStatus {
+                    override fun onSuccess() {
+                        setTextToSpeechVoice()
+                        setTextToSpeechPitch()
+                        setTextToSpeechRate()
+                    }
+
+                    override fun onError(errorMessage: String) {
+                    }
+                })
+            }
         }
     }
 
@@ -593,7 +593,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                         )
                     ) {
                         logv("Changing speech engine package to $enginePackageName")
-                        initializeTextToSpeechProvider(enginePackageName)
+                        initializeTextToSpeechProvider(enginePackageName, forceInitialize = true)
                     }
                 }
                 getString(R.string.voice_key) -> {

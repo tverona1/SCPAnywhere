@@ -1,6 +1,5 @@
-package com.tverona.scpanywhere.viewmodels
+package com.tverona.scpanywhere.repositories
 
-import androidx.lifecycle.MutableLiveData
 import com.tverona.scpanywhere.downloader.StateData
 import com.tverona.scpanywhere.utils.LiveEvent
 

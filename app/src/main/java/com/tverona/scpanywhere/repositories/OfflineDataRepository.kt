@@ -1,7 +1,11 @@
 package com.tverona.scpanywhere.repositories
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.tverona.scpanywhere.downloader.DownloadAssetMetadata
+import com.tverona.scpanywhere.downloader.DownloadAssetMetadataObservable
 import com.tverona.scpanywhere.downloader.LocalAssetMetadata
+import com.tverona.scpanywhere.downloader.LocalAssetMetadataObservable
 import com.tverona.scpanywhere.zipresource.ZipResourceFile
 
 data class ExternalStorageMetadata(val name: String, val path: String, val usableSpace: Long)
@@ -14,6 +18,20 @@ interface OfflineDataRepository {
 
     val externalStorageList: LiveData<List<ExternalStorageMetadata>>
     val currentExternalStorage: LiveData<ExternalStorageMetadata>
+    val operationState: StateLiveData<String>
+
+    val downloadableItems: LiveData<List<DownloadAssetMetadataObservable>>
+    val localItems: LiveData<List<LocalAssetMetadataObservable>>
+    val localItemsSize: LiveData<Long>
+    val downloadSizeDelta: LiveData<Long>
+    val usableSpace: LiveData<Long>
+    val requiredSpace: LiveData<Long>
+    val isDownloading : LiveData<Boolean>
+    val changedStorageLocation: LiveData<Unit>
+    val onDownloadableClick: LiveData<DownloadAssetMetadata>
+    val onDeleteClick: LiveData<LocalAssetMetadata>
+    val onLocalItemClick: LiveData<LocalAssetMetadata>
+    val isChangingStorage : LiveData<Boolean>
 
     suspend fun load()
 
@@ -24,8 +42,20 @@ interface OfflineDataRepository {
     suspend fun cleanupTempFiles()
     suspend fun populateStorageEntries()
 
+    fun download()
+    fun cancelDownload()
+    suspend fun downloadLatestReleaseMetadataSync()
+    fun deleteLocalAsset(asset: LocalAssetMetadata)
+    suspend fun getLocalAssetsScoped()
+    fun cancelChangeStorage()
+    suspend fun changeStorageLocation(sourcePath: String, destPath: String)
+    fun clearOnDownloadableClickItem()
+    fun clearOnDiskClickItem()
+    fun clearOnDeleteClickItem()
+
     companion object {
         const val tmpExt = ".tmp"
         const val zipExt = ".zip"
+        const val baseAssetName = "base"
     }
 }

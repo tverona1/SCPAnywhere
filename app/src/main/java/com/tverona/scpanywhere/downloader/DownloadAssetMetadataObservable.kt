@@ -13,10 +13,10 @@ class DownloadAssetMetadataObservable(val asset: DownloadAssetMetadata) : Recycl
     lateinit var clickHandler: (asset: DownloadAssetMetadata) -> Unit
     lateinit var shouldDownloadClickHandler: (asset: DownloadAssetMetadata) -> Unit
 
-    val downloadingProgress = ObservableInt(asset.downloadingProgress)
-    val downloadingSize = ObservableLong(asset.downloadingSize)
-    val isDownloading = ObservableField(asset.isDownloading)
-    val shouldDownload: ObservableBoolean = object : ObservableBoolean(asset.shouldDownload) {
+    val downloadingProgress = ObservableInt(0)
+    val downloadingSize = ObservableLong(0)
+    val isDownloading = ObservableField(false)
+    val shouldDownload: ObservableBoolean = object : ObservableBoolean(true) {
         override fun set(value: Boolean) {
             shouldDownloadClickHandler(asset)
             super.set(value)

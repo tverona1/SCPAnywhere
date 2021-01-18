@@ -7,12 +7,14 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import com.tverona.scpanywhere.R
 import com.tverona.scpanywhere.databinding.FragmentDownloaderBinding
+import com.tverona.scpanywhere.utils.await
 import com.tverona.scpanywhere.utils.logv
 import com.tverona.scpanywhere.utils.observeOnce
 import com.tverona.scpanywhere.viewmodels.OfflineDataViewModel
-import kotlinx.android.synthetic.main.fragment_downloader.*
+import kotlinx.coroutines.launch
 
 /**
  * Fragment to manage downloadable assets for offline mode
@@ -50,26 +52,25 @@ class DownloadFragment : Fragment() {
             }
         }
 
-        offlineDataViewModel.isDownloadingObservable.observe(viewLifecycleOwner) { isDownloading ->
+        offlineDataViewModel.isDownloading.observe(viewLifecycleOwner) { isDownloading ->
             if (isDownloading) {
                 logv("Downloading")
                 binding.downloadButton.text = getString(android.R.string.cancel)
             } else {
-                logv("Finished downloading")
+                logv("Not downloading")
                 binding.downloadButton.text = getString(R.string.download)
             }
 
             binding.downloadButton.setOnClickListener { view ->
-
                 if (isDownloading) {
                     offlineDataViewModel.cancelDownload()
                 } else {
-                    var title: String? = null
-                    var description: String? = null
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        var title: String? = null
+                        var description: String? = null
 
-                    // If not enough storage left, bail
-                    offlineDataViewModel.downloadSizeDelta.observeOnce(viewLifecycleOwner) {
-                        if (offlineDataViewModel.downloadSizeDelta.value!! < 0) {
+                        // If not enough storage left, bail
+                        if (offlineDataViewModel.downloadSizeDelta.await() < 0) {
                             title = getString(R.string.titleNotEnoughSpace)
                             description = getString(R.string.descNotEnoughSpace)
                             AlertDialog.Builder(requireContext())
@@ -80,7 +81,7 @@ class DownloadFragment : Fragment() {
                                 ) { dialog, which ->
                                 }
                                 .show()
-                        } else if (offlineDataViewModel.isChangingStorage) {
+                        } else if (offlineDataViewModel.isChangingStorage.await()) {
                             // If already changing storage, ask if we should cancel
                             AlertDialog.Builder(requireContext())
                                 .setTitle(getString(R.string.titleCancelChangingStorage))
@@ -96,7 +97,6 @@ class DownloadFragment : Fragment() {
                                 .show()
                         } else {
                             offlineDataViewModel.download()
-                            offlineDataViewModel._localItemsSize
                         }
                     }
                 }

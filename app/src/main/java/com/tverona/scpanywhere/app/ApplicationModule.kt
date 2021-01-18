@@ -14,6 +14,7 @@ import com.tverona.scpanywhere.repositories.OfflineDataRepository
 import com.tverona.scpanywhere.repositories.OfflineDataRepositoryImpl
 import com.tverona.scpanywhere.repositories.OfflineModeRepository
 import com.tverona.scpanywhere.utils.TextToSpeechProvider
+import com.tverona.scpanywhere.repositories.SpeechContent
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,8 +32,8 @@ class ApplicationModule {
 
     @Singleton
     @Provides
-    fun provideOfflineDataRepository(@ApplicationContext appContext: Context): OfflineDataRepository {
-        return OfflineDataRepositoryImpl(appContext)
+    fun provideOfflineDataRepository(@ApplicationContext appContext: Context, githubReleaseDownloader: GithubReleaseDownloader): OfflineDataRepository {
+        return OfflineDataRepositoryImpl(appContext, githubReleaseDownloader)
     }
 
     @Provides
@@ -117,5 +118,11 @@ class ApplicationModule {
         @ApplicationContext appContext: Context
     ): TextToSpeechProvider {
         return TextToSpeechProvider(appContext)
+    }
+
+    @Provides
+    @Singleton
+    fun providesSpeechContent(): SpeechContent {
+        return SpeechContent()
     }
 }

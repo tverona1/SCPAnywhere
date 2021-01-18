@@ -1,5 +1,6 @@
 package com.tverona.scpanywhere.downloader
 
+import com.tverona.scpanywhere.utils.loge
 import kotlinx.coroutines.*
 import okhttp3.Call
 import okhttp3.Callback
@@ -36,6 +37,7 @@ suspend fun Call.downloadAndSaveTo(
 
         enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
+                loge("downloadAndSaveTo OnFailure", e)
                 cont.resumeWithException(e)
             }
 

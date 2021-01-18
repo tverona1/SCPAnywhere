@@ -59,7 +59,7 @@
     <string name="titleConfirmChangeStorage">Change storage location?</string>
     <string name="descConfirmChangeStorage">Downloaded data will be moved to the new location. Are you sure you want to proceed?</string>
     <string name="titleNotEnoughSpace">Not enough space</string>
-    <string name="descNotEnoughSpace">There\'s not enough space remaining on this storage. Please change storage or free up space.</string>
+    <string name="descNotEnoughSpace">There is not enough space remaining on this storage. Please change storage or free up space.</string>
     <string name="external_storage">External storage</string>
     <string name="internal_storage">Internal storage</string>
     <string name="free_space">Free Space</string>
@@ -168,4 +168,18 @@
     <string name="expand_blocks">Expand Blocks</string>
     <string name="expand_blocks_key">expand_blocks_key</string>
     <string name="expand_blocks_description">If enabled, expands all collapsed blocks</string>
+
+    <string name="download_channel_name">Download Progress</string>
+    <string name="download_channel_description">Show download progress</string>
+    <string name="download_notification_title"><![CDATA[Downloading %1$d/%2$d files (%3$s/%4$s - %5$d%%)]]></string>
+    <string name="cancel_download">Cancel Download</string>
+
+    <string name="changestorage_channel_name">Change Storage Location</string>
+    <string name="changestorage_channel_description">Show change storage location progress</string>
+    <string name="changestorage_notification_title"><![CDATA[Changing storage - moving file %1$s (%2$d/%3$d)]]></string>
+    <string name="cancel_changestorage">Cancel change storage</string>
+
+    <string name="speechprovider_channel_name">Text-to-Speech</string>
+    <string name="speechprovider_channel_description">Show Text-to-Speech notification</string>
+    <string name="speechprovider_notification_title">Reading aloud \"%1$s\"</string>
 </resources>

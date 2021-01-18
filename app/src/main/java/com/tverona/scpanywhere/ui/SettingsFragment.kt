@@ -21,7 +21,6 @@ import com.tverona.scpanywhere.R
 import com.tverona.scpanywhere.utils.*
 import com.tverona.scpanywhere.viewmodels.OfflineDataViewModel
 import com.tverona.scpanywhere.viewmodels.ScpDataViewModel
-import com.tverona.scpanywhere.viewmodels.TextToSpeechViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.android.synthetic.main.export_item.*
@@ -38,7 +37,6 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class SettingsFragment : PreferenceFragmentCompat() {
     private val offlineDataViewModel: OfflineDataViewModel by activityViewModels()
-    private val textToSpeechViewModel: TextToSpeechViewModel by activityViewModels()
     private val scpDataViewModel: ScpDataViewModel by activityViewModels()
     lateinit private var sharedPreferences: SharedPreferences
     lateinit private var fragmentView: View
@@ -126,7 +124,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
 
         // Set up text to speech preference
-        textToSpeechViewModel.initialized.observe(viewLifecycleOwner) {
+        textToSpeechProvider.isInitialized.observe(viewLifecycleOwner) {
             if (it) {
                 val speechEnginePreference =
                     findPreference<ListPreference>(getString(R.string.speech_engine_key))
@@ -304,28 +302,28 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private val onStorageUpdated =
         Preference.OnPreferenceChangeListener { preference, newValue ->
-            logv("Updating storage preference")
-            var cancelOnly = false
-            val listPreference = preference as ListPreference
+            viewLifecycleOwner.lifecycleScope.launch {
+                logv("Updating storage preference")
+                var cancelOnly = false
+                val listPreference = preference as ListPreference
 
-            offlineDataViewModel.localItems.observeOnce(viewLifecycleOwner) {
                 var title: String? = null
                 var description: String? = null
                 val newPath = newValue as String
 
-                if (offlineDataViewModel.isChangingStorage) {
+                if (offlineDataViewModel.isChangingStorage.await()) {
                     // Changing storage, ask if we should cancel
                     title = getString(R.string.titleCancelChangingStorage)
                     description = getString(R.string.descCancelChangingStorage)
                     cancelOnly = true
                 } else if (newPath.equals(listPreference.value, ignoreCase = true)) {
                     // No-op
-                    return@observeOnce
-                } else if (offlineDataViewModel.isDownloading) {
+                    return@launch
+                } else if (offlineDataViewModel.isDownloading.await()) {
                     // Downloading, ask if we should cancel
                     title = getString(R.string.titleCancelDownlading)
                     description = getString(R.string.descCancelDownloading)
-                } else if (offlineDataViewModel.localItems.value?.size!! > 0) {
+                } else if (offlineDataViewModel.localItems.await().isNotEmpty()) {
                     // Local items exist, ask for confirmation
                     title = getString(R.string.titleConfirmChangeStorage)
                     description = getString(R.string.descConfirmChangeStorage)
@@ -368,8 +366,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
             // Cancel any on-going operations
-            offlineDataViewModel.cancelDownloadSync()
-            offlineDataViewModel.cancelChangeStorageSync()
+            offlineDataViewModel.cancelDownload()
+            offlineDataViewModel.cancelChangeStorage()
 
             if (!cancelOnly) {
                 // If not enough space, alert user

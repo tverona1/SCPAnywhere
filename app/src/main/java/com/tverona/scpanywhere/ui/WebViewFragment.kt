@@ -23,11 +23,14 @@ import androidx.lifecycle.*
 import androidx.preference.PreferenceManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.webkit.WebViewAssetLoader
+import androidx.work.*
 import com.tverona.scpanywhere.R
 import com.tverona.scpanywhere.database.BookmarkEntry
 import com.tverona.scpanywhere.pathhandlers.*
+import com.tverona.scpanywhere.repositories.SpeechContent
 import com.tverona.scpanywhere.utils.*
 import com.tverona.scpanywhere.viewmodels.*
+import com.tverona.scpanywhere.worker.SpeechProviderWorker
 import com.tverona.scpanywhere.zipresource.ZipResourceFile
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -54,8 +57,11 @@ class WebViewFragment : Fragment(), View.OnClickListener {
     // Text to speech provider & state
     @Inject
     lateinit var textToSpeechProvider: TextToSpeechProvider
-    private var isSpeaking = false
-    private var lastUtteranceId: Int? = null
+
+    @Inject
+    lateinit var speechContent: SpeechContent
+
+    private val isSpeaking = MutableLiveData<Boolean>(false)
 
     // Listener for refresh swipe
     private var swipeRefreshLayout: SwipeRefreshLayout? = null
@@ -73,7 +79,6 @@ class WebViewFragment : Fragment(), View.OnClickListener {
     // View models
     private val scpDataItemViewModel: ScpDataViewModel by activityViewModels()
     private val webDataViewModel: WebDataViewModel by activityViewModels()
-    private val textToSpeechViewModel: TextToSpeechViewModel by activityViewModels()
     private lateinit var webviewContentViewModel: WebViewContentViewModel
 
     // Current url & title
@@ -204,6 +209,36 @@ class WebViewFragment : Fragment(), View.OnClickListener {
             )
         }
 
+        // Observe speech provider worker
+        WorkManager.getInstance(requireContext()).getWorkInfosByTagLiveData(SpeechProviderWorker.SPEECHPROVIDER_WORKER_TAG).observe(viewLifecycleOwner) { workInfoList ->
+            if (null != workInfoList) {
+                for (workInfo in workInfoList) {
+                    when (workInfo.state) {
+                        WorkInfo.State.ENQUEUED -> {
+                            logv("Speech provier worker enqueued")
+                            isSpeaking.value = true
+                        }
+
+                        WorkInfo.State.RUNNING -> {
+                            if (isSpeaking.value == false) {
+                                logv("Speech provier worker running")
+                                isSpeaking.value = true
+                            }
+                        }
+
+                        WorkInfo.State.FAILED,
+                        WorkInfo.State.CANCELLED,
+                        WorkInfo.State.SUCCEEDED -> {
+                            logv("Speech provier worker stopped, state: ${workInfo.state}")
+                            isSpeaking.value = false
+                            stopSpeak()
+                        }
+                    }
+                }
+            }
+            WorkManager.getInstance(requireContext()).pruneWork()
+        }
+
         setHasOptionsMenu(true)
         return root
     }
@@ -242,7 +277,6 @@ class WebViewFragment : Fragment(), View.OnClickListener {
         logv("onDestroyView")
         super.onDestroyView()
         fragmentState = FragmentState.DESTROYED
-        stopSpeak(resetUtteranceId = true)
     }
 
     private fun setToolbarTitleClickListener() {
@@ -323,7 +357,7 @@ class WebViewFragment : Fragment(), View.OnClickListener {
             autoMarkReadHelper.onUrlTitle(urlTitle)
 
             // Enable text to speech button when text to speech provider is initialized
-            textToSpeechViewModel.initialized.observe(viewLifecycleOwner) {
+            textToSpeechProvider.isInitialized.observe(viewLifecycleOwner) {
                 playItem.isEnabled = it
             }
 
@@ -391,19 +425,21 @@ class WebViewFragment : Fragment(), View.OnClickListener {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {
-        val playItem = menu.findItem(R.id.play)
-        if (isSpeaking) {
-            playItem.icon = ContextCompat.getDrawable(
-                requireActivity(),
-                R.drawable.baseline_pause_24
-            )
-            playItem.title = getString(R.string.pause)
-        } else {
-            playItem.icon = ContextCompat.getDrawable(
-                requireActivity(),
-                R.drawable.baseline_play_arrow_24
-            )
-            playItem.title = getString(R.string.play)
+        isSpeaking.observe(viewLifecycleOwner) {
+            val playItem = menu.findItem(R.id.play)
+            if (it) {
+                playItem.icon = ContextCompat.getDrawable(
+                    requireActivity(),
+                    R.drawable.baseline_pause_24
+                )
+                playItem.title = getString(R.string.pause)
+            } else {
+                playItem.icon = ContextCompat.getDrawable(
+                    requireActivity(),
+                    R.drawable.baseline_play_arrow_24
+                )
+                playItem.title = getString(R.string.play)
+            }
         }
     }
 
@@ -435,10 +471,12 @@ class WebViewFragment : Fragment(), View.OnClickListener {
             }
             R.id.play -> {
                 // Start / stop speaking
-                if (isSpeaking) {
-                    stopSpeak(resetUtteranceId = false)
-                } else {
-                    startSpeak()
+                isSpeaking.observeOnce(viewLifecycleOwner) {
+                    if (it) {
+                        stopSpeak()
+                    } else {
+                        startSpeak()
+                    }
                 }
                 true
             }
@@ -500,17 +538,31 @@ class WebViewFragment : Fragment(), View.OnClickListener {
      * Start speaking current page content
      */
     private fun startSpeak() {
-        if (isSpeaking) {
-            return
-        }
-
-        isSpeaking = true
-        requireActivity().invalidateOptionsMenu()
-
         getWebViewContent()
-        webviewContentViewModel.content.observeOnce(viewLifecycleOwner) {
-            if (null != it) {
-                speak(it)
+        webviewContentViewModel.content.observeOnce(viewLifecycleOwner) { content ->
+            currentUrlTitle.observeOnce(viewLifecycleOwner) { urlTitle ->
+
+                if (null != content) {
+                    speechContent.content = content
+
+                    val speechWorkerData = workDataOf(
+                        SpeechProviderWorker.KEY_URL to urlTitle.url,
+                        SpeechProviderWorker.KEY_TITLE to urlTitle.title
+                    )
+
+                    val request =
+                        OneTimeWorkRequestBuilder<SpeechProviderWorker>()
+                            .setInputData(speechWorkerData)
+                            .addTag(SpeechProviderWorker.SPEECHPROVIDER_WORKER_TAG)
+                            .build()
+
+                    // Enqueue work
+                    WorkManager.getInstance(requireContext()).enqueueUniqueWork(
+                        SpeechProviderWorker.SPEECHPROVIDER_WORKER_TAG,
+                        ExistingWorkPolicy.REPLACE,
+                        request
+                    )
+                }
             }
         }
     }
@@ -518,54 +570,9 @@ class WebViewFragment : Fragment(), View.OnClickListener {
     /**
      * Stop speaking
      */
-    private fun stopSpeak(resetUtteranceId: Boolean) {
-        textToSpeechProvider.stop()
-        isSpeaking = false
-
-        if (resetUtteranceId) {
-            logv("Reset utterance")
-            lastUtteranceId = null
-        }
-
-        if (fragmentState != FragmentState.DESTROYED) {
-            requireActivity().invalidateOptionsMenu()
-        }
-    }
-
-    /**
-     * Speak content provided by [content]
-     */
-    private fun speak(content: String) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            textToSpeechProvider.speak(
-                content,
-                lastUtteranceId,
-                object : TextToSpeechProvider.SpeechProgress {
-                    override fun onStart(totalUtterances: Int) {
-                    }
-
-                    override fun onUtteranceDone(utteranceId: Int) {
-                        logv("onUtteranceDone: $utteranceId")
-                        lastUtteranceId = utteranceId
-                    }
-
-                    override fun onDone() {
-                        viewLifecycleOwner.lifecycleScope.launch {
-                            withContext(Dispatchers.Main) {
-                                stopSpeak(resetUtteranceId = true)
-                            }
-                        }
-                    }
-
-                    override fun onError(utteranceId: Int) {
-                        viewLifecycleOwner.lifecycleScope.launch {
-                            withContext(Dispatchers.Main) {
-                                stopSpeak(resetUtteranceId = false)
-                            }
-                        }
-                    }
-                })
-        }
+    private fun stopSpeak() {
+        WorkManager.getInstance(requireContext()).cancelAllWorkByTag(SpeechProviderWorker.SPEECHPROVIDER_WORKER_TAG)
+        speechContent.content = null
     }
 
     /**
@@ -773,7 +780,6 @@ class WebViewFragment : Fragment(), View.OnClickListener {
                 }
 
                 clearTitle(getString(R.string.loading))
-                stopSpeak(resetUtteranceId = true)
                 autoMarkReadHelper.onNewPage()
                 monitorTimer.stop()
             }
