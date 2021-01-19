@@ -11,7 +11,6 @@ import androidx.lifecycle.OnLifecycleEvent
 
 class ConnectivityMonitor(
     context: Context,
-    lifecycleOwner: LifecycleOwner,
     private val callback: (Boolean) -> Unit
 ) : LifecycleObserver {
     private var lastIsConnected: Boolean? = null
@@ -43,10 +42,6 @@ class ConnectivityMonitor(
             //connectivityManager.activeNetworkInfo?.isConnectedOrConnecting == true
             toggleConnectionState()
         }
-    }
-
-    init {
-        lifecycleOwner.lifecycle.addObserver(this)
     }
 
     @Suppress("unused")

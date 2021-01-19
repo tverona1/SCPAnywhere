@@ -15,6 +15,7 @@ import com.tverona.scpanywhere.recycleradapter.RecyclerItem
 import com.tverona.scpanywhere.recycleradapter.RecyclerItemFilter
 import com.tverona.scpanywhere.repositories.*
 import com.tverona.scpanywhere.utils.*
+import com.tverona.scpanywhere.zipresource.ZipResourceFile
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -69,10 +70,30 @@ class ScpDataViewModel @ViewModelInject constructor(
     private val _talesNum = MutableLiveData<Int>()
     val talesNum: LiveData<Int> = _talesNum
 
+    private var scpItemByUrl = HashMap<String, RecyclerItem>()
+    private var taleItemByUrl = HashMap<String, RecyclerItem>()
+
     val seriesKey = MutableLiveData<String>()
     val seriesName = MutableLiveData<String>()
 
     val totalReadTimeSecs = statsRepository.totalReadTimeSecs
+
+    val connectivityMonitor: ConnectivityMonitor
+
+    override fun onCleared() {
+        logv("onCleared")
+        super.onCleared()
+
+        try {
+            bookmarksRepository.allBookmarks.removeObserver(bookmarkObserver)
+            shouldRefreshScpList.removeObserver(refreshScpListObserver)
+            offlineDataRepository.zipResourceFile.removeObserver(offlineDataObserver)
+            offlineModeRepository.offlineMode.removeObserver(offlineDataObserver)
+            ProcessLifecycleOwner.get().lifecycle.removeObserver(connectivityMonitor)
+        } catch (e: Exception) {
+            loge("Error removing observer", e)
+        }
+    }
 
     /**
      * Get offline scp list
@@ -183,9 +204,9 @@ class ScpDataViewModel @ViewModelInject constructor(
 
         val itemsBySeries =
             HashMap<String, MutableList<RecyclerItem>>().withDefault { arrayListOf() }
-        val scpItemByUrl = HashMap<String, RecyclerItem>()
+        scpItemByUrl = HashMap()
+        taleItemByUrl = HashMap()
         val scpEntriesByUrl = HashMap<String, UrlEntry>()
-        val taleItemByUrl = HashMap<String, RecyclerItem>()
         val taleEntriesByUrl = HashMap<String, UrlEntry>()
         val items = ArrayList<RecyclerItem>()
 
@@ -306,65 +327,122 @@ class ScpDataViewModel @ViewModelInject constructor(
     private var refreshLock = Mutex()
 
     private fun observeRefreshScpData() {
-        shouldRefreshScpList.observe(ProcessLifecycleOwner.get(), {
-            ProcessLifecycleOwner.get().lifecycle.coroutineScope.launch {
-                withContext(Dispatchers.IO) {
-                    refreshLock.withLock {
-                        val time = checkScpDataNeedsRefresh()
-                        if (false == offlineModeRepository.offlineMode.value && null != time) {
-                            onlineDataRepository.refresh(time)
-                            processScpData(
-                                onlineDataRepository.getScpEntries(),
-                                onlineDataRepository.getTaleEntries(),
-                                onlineDataRepository.getTalesNum()
-                            )
-                        }
+        shouldRefreshScpList.observeForever(refreshScpListObserver)
+    }
+
+    val refreshScpListObserver = Observer<Boolean> {
+        ProcessLifecycleOwner.get().lifecycle.coroutineScope.launch {
+            withContext(Dispatchers.IO) {
+                refreshLock.withLock {
+                    val time = checkScpDataNeedsRefresh()
+                    if (false == offlineModeRepository.offlineMode.value && null != time) {
+                        onlineDataRepository.refresh(time)
+                        processScpData(
+                            onlineDataRepository.getScpEntries(),
+                            onlineDataRepository.getTaleEntries(),
+                            onlineDataRepository.getTalesNum()
+                        )
                     }
                 }
             }
-        })
+        }
     }
 
-    init {
-        offlineDataRepository.zipResourceFile.observe(
-            ProcessLifecycleOwner.get(),
-            { zipResourceFile ->
-                offlineModeRepository.offlineMode.observe(
-                    ProcessLifecycleOwner.get(),
-                    { offlineMode ->
-                        logv("scpviewmodel - offline mode is $offlineMode")
-                        ProcessLifecycleOwner.get().lifecycle.coroutineScope.launch {
-                            withContext(Dispatchers.IO) {
-                                refreshLock.withLock {
-                                    val urlList: List<UrlEntry>
-                                    val taleList: List<UrlEntry>
-                                    val talesNum: Int
-                                    if (true == offlineModeRepository.offlineMode.value) {
-                                        urlList = getOfflineScpList()
-                                        taleList = getOfflineTaleList()
-                                        talesNum = getOfflineTalesNum()
-                                    } else {
-                                        urlList = getOnlineScpList()
-                                        taleList = getOnlineTaleList()
-                                        talesNum = getOnlineTalesNum()
-                                    }
+    val bookmarkObserver =
+        Observer<List<BookmarkEntry>> { bookmarks ->
+            if (null != bookmarks) {
+                val scpReadEntries = mutableListOf<RecyclerItem>()
+                val scpFavoriteEntries = mutableListOf<RecyclerItem>()
+                val readEntries = HashMap<String, UrlEntry>()
+                val favoriteEntries = HashMap<String, UrlEntry>()
+                for (bookmark in bookmarks) {
+                    var urlEntryRecyclerItem: RecyclerItem?
+                    var urlEntryClickable: UrlEntryClickable?
+                    if (scpItemByUrl.containsKey(bookmark.url)) {
+                        urlEntryRecyclerItem =
+                            scpItemByUrl[bookmark.url]!!
+                        urlEntryClickable =
+                            urlEntryRecyclerItem.data as UrlEntryClickable
+                    } else if (taleEntriesByUrl.value?.containsKey(bookmark.url) == true) {
+                        urlEntryRecyclerItem =
+                            taleItemByUrl[bookmark.url]!!
+                        urlEntryClickable =
+                            urlEntryRecyclerItem.data as UrlEntryClickable
+                    } else {
+                        val otherEntry = UrlEntry(
+                            url = bookmark.url,
+                            title = bookmark.title,
+                            rating = null,
+                            name = null,
+                            series = null
+                        )
+                        urlEntryClickable =
+                            createListItemClickable(otherEntry)
+                        urlEntryRecyclerItem =
+                            urlEntryClickable.toRecyclerItem()
+                    }
 
-                                    processScpData(urlList, taleList, talesNum)
-                                }
-                            }
+                    urlEntryClickable.isRead.set(bookmark.read)
+                    urlEntryClickable.isFavorite.set(bookmark.favorite)
+
+                    if (bookmark.read) {
+                        scpReadEntries.add(urlEntryRecyclerItem)
+                        readEntries[bookmark.url] =
+                            urlEntryClickable.urlEntry
+                    }
+                    if (bookmark.favorite) {
+                        scpFavoriteEntries.add(urlEntryRecyclerItem)
+                        favoriteEntries[bookmark.url] =
+                            urlEntryClickable.urlEntry
+                    }
+                }
+
+                _allRead.postValue(scpReadEntries)
+                _allFavorites.postValue(scpFavoriteEntries)
+                _readByUrl.postValue(readEntries)
+                _favoriteByUrl.postValue(favoriteEntries)
+            }
+        }
+
+    val offlineDataObserver =
+        Observer<Any> {
+            logv("scpviewmodel - offline mode is ${offlineModeRepository.offlineMode.value}")
+            ProcessLifecycleOwner.get().lifecycle.coroutineScope.launch {
+                withContext(Dispatchers.IO) {
+                    refreshLock.withLock {
+                        val urlList: List<UrlEntry>
+                        val taleList: List<UrlEntry>
+                        val talesNum: Int
+                        if (true == offlineModeRepository.offlineMode.value) {
+                            urlList = getOfflineScpList()
+                            taleList = getOfflineTaleList()
+                            talesNum = getOfflineTalesNum()
+                        } else {
+                            urlList = getOnlineScpList()
+                            taleList = getOnlineTaleList()
+                            talesNum = getOnlineTalesNum()
                         }
-                    })
-            })
 
-        observeRefreshScpData()
+                        processScpData(urlList, taleList, talesNum)
+                    }
+                }
+            }
+        }
 
-        // Check internet connectivity
-        ConnectivityMonitor(context, ProcessLifecycleOwner.get()) { isConnected ->
+
+    init {
+        logv("initializing viewmodel")
+
+        offlineDataRepository.zipResourceFile.observeForever(offlineDataObserver)
+        offlineModeRepository.offlineMode.observeForever(offlineDataObserver)
+
+        connectivityMonitor = ConnectivityMonitor(context) { isConnected ->
             logv("Network connectivity is $isConnected")
             if (isConnected) {
                 shouldRefreshScpList.postValue(true)
             }
         }
+        ProcessLifecycleOwner.get().lifecycle.addObserver(connectivityMonitor)
     }
 
     fun updateBookmarkEntry(bookmarkEntry: BookmarkEntry) = viewModelScope.launch {
@@ -377,7 +455,7 @@ class ScpDataViewModel @ViewModelInject constructor(
         }
     }
 
-    suspend fun addReadTime(url: String, readTimeSecs: Long) : Long = withContext(Dispatchers.IO)  {
+    suspend fun addReadTime(url: String, readTimeSecs: Long): Long = withContext(Dispatchers.IO) {
         return@withContext statsRepository.addReadTime(url, readTimeSecs)
     }
 
