@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonClass
  */
 @JsonClass(generateAdapter = true)
 data class UrlEntry(
-    val title: String,
+    var title: String,
     var url: String,
     val rating: Int?,
     val series: String?,

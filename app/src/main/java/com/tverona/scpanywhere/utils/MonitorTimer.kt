@@ -7,7 +7,7 @@ import kotlinx.coroutines.launch
 /**
  * Lifecycle aware monitor timer
  */
-class MonitorTimer(private val lifecycleOwner: LifecycleOwner) {
+class MonitorTimer(lifecycleOwner: LifecycleOwner) {
     // Timer action
     private enum class TimerAction {
         START,

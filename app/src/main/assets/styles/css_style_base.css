@@ -5,6 +5,10 @@ body {
     word-break: break-word;
 }
 
+table {
+    word-break: normal;
+}
+
 span, a {
     word-break: break-word;
 }

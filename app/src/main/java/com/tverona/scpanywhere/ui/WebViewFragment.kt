@@ -770,10 +770,6 @@ class WebViewFragment : Fragment(), View.OnClickListener {
 
                 logv("onPageStarted")
 
-                // This is required to zoom back out after loading page
-                webView.settings.loadWithOverviewMode = true
-                webView.settings.loadWithOverviewMode = false
-
                 // Handle auto-mark as read on next item
                 if (null != url) {
                     handleAutoMarkReadOnNextItem(url)
@@ -839,7 +835,7 @@ class WebViewFragment : Fragment(), View.OnClickListener {
             // Handle auto mark read when scroll to bottom is enabled
             if (autoMarkReadHelper.isScrollToBottomEnabled()) {
                 val webView = view as WebView
-                val contentHeight = webView.contentHeight * zoomScale
+                val contentHeight = webView.contentHeight * webView.scale
                 val total =
                     Math.max(
                         contentHeight * resources.displayMetrics.density - webView.getHeight(),
@@ -915,10 +911,10 @@ class WebViewFragment : Fragment(), View.OnClickListener {
                     val wordCount =
                         Regex("""(\s+|(\r\n|\r|\n))""").findAll(it.trim()).count() + 1
 
-                    // Estimated read time is based on 180 words / min (average read time for online content)
-                    val readEstimateSecs = wordCount / 3L
-                    logv("Words: $wordCount, read estimate: $readEstimateSecs secs")
-                    autoMarkReadHelper.setEstimatedReadTime(readEstimateSecs)
+                    // Estimated read time is based on 200 words / min (average read time for online content)
+                    val readEstimateSecs = (wordCount / 200f) * 60
+                    logv("Words: $wordCount, read estimate: ${readEstimateSecs .toInt()} secs")
+                    autoMarkReadHelper.setEstimatedReadTime(readEstimateSecs.toLong())
                 }
             }
         }

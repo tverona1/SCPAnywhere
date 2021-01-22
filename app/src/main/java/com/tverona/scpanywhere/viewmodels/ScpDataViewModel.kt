@@ -109,7 +109,14 @@ class ScpDataViewModel @ViewModelInject constructor(
             )
 
         if (null != inputStream) {
-            return UrlEntry.linkEntries(JsonList.loadJsonList<UrlEntry>(inputStream))
+            val scpList = UrlEntry.linkEntries(JsonList.loadJsonList<UrlEntry>(inputStream))
+            // JSoup, used in online mode, unescapes certain characters. Do this here to match the behavior.
+            scpList.map {
+                it.title = it.title.replace("&amp;", "&")
+                    .replace("&quot;","\"")
+                    .replace("&#039;","'")
+            }
+            return scpList
         } else {
             return listOf()
         }
@@ -129,7 +136,14 @@ class ScpDataViewModel @ViewModelInject constructor(
             )
 
         if (null != inputStream) {
-            return JsonList.loadJsonList<UrlEntry>(inputStream).sortedBy { it.title }
+            val talesList = JsonList.loadJsonList<UrlEntry>(inputStream).sortedBy { it.title }
+            // JSoup, used in online mode, unescapes certain characters. Do this here to match the behavior.
+            talesList.map {
+                it.title = it.title.replace("&amp;", "&")
+                    .replace("&quot;","\"")
+                    .replace("&#039;","'")
+            }
+            return talesList
         } else {
             return listOf()
         }
@@ -383,6 +397,7 @@ class ScpDataViewModel @ViewModelInject constructor(
         offlineDataRepository.zipResourceFile.observeForever(offlineDataObserver)
         offlineModeRepository.offlineMode.observeForever(offlineDataObserver)
 
+        observeRefreshScpData()
         connectivityMonitor = ConnectivityMonitor(context) { isConnected ->
             logv("Network connectivity is $isConnected")
             if (isConnected) {
