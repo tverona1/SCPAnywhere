@@ -33,6 +33,7 @@ class AutoMarkReadHelper(private val context: Context, private val onMarkRead: (
 
     fun onUrlTitle(urlTitle: WebViewFragment.UrlTitle) {
         this.urlTitle = urlTitle
+        updateAutoRead()
     }
 
     fun onScrolledToBottom() {

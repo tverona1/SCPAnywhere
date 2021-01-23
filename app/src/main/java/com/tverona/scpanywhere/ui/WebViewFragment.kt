@@ -836,9 +836,10 @@ class WebViewFragment : Fragment(), View.OnClickListener {
             if (autoMarkReadHelper.isScrollToBottomEnabled()) {
                 val webView = view as WebView
                 val contentHeight = webView.contentHeight * webView.scale
+                val webViewHeight = webView.height
                 val total =
                     Math.max(
-                        contentHeight * resources.displayMetrics.density - webView.getHeight(),
+                        contentHeight - webViewHeight,
                         0f
                     )
 
@@ -963,7 +964,7 @@ class WebViewFragment : Fragment(), View.OnClickListener {
         if (normalizedUrl.startsWith(getString(R.string.base_path))) {
             if (autoMarkReadHelper.isReadTimeEnabled() && fragmentState != FragmentState.DESTROYED) {
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-                    val stats = scpDataItemViewModel.getReadTimeByUrl(inputUrl).await()
+                    val stats = scpDataItemViewModel.getReadTimeByUrl(normalizedUrl).await()
                     if (null != stats) {
                         autoMarkReadHelper.onReadTimeElapsed(stats.readTimeSecs)
                     }
