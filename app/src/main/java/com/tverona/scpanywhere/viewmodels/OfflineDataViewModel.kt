@@ -13,10 +13,12 @@ import com.tverona.scpanywhere.downloader.LocalAssetMetadata
 import com.tverona.scpanywhere.downloader.LocalAssetMetadataObservable
 import com.tverona.scpanywhere.recycleradapter.RecyclerItem
 import com.tverona.scpanywhere.repositories.OfflineDataRepository
+import com.tverona.scpanywhere.repositories.OfflineDataRepositoryImpl
 import com.tverona.scpanywhere.utils.StringFormatter
 import com.tverona.scpanywhere.zipresource.ZipResourceFile
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
+import java.util.*
 
 /**
  * View model that represents local (on-disk) assets and downloadable assets
@@ -32,8 +34,14 @@ class OfflineDataViewModel @ViewModelInject constructor(
 
     // Downloadable items
     val downloadableItems: LiveData<List<RecyclerItem>> =
-        Transformations.map(offlineDataRepository.downloadableItems) {
-            it.map { item -> item.toRecyclerItem() }
+        Transformations.map(offlineDataRepository.releaseMetadataObservable) {
+            it.downloadAssetMetadata.map { item -> item.toRecyclerItem() }
+        }
+
+    data class ReleaseMetadataViewModel(var publishedAt: Date, var isEmpty: Boolean)
+    val releaseMetadata: LiveData<ReleaseMetadataViewModel> =
+        Transformations.map(offlineDataRepository.releaseMetadataObservable) {
+            ReleaseMetadataViewModel(it.publishedAt, it.downloadAssetMetadata.isEmpty())
         }
 
     // Local (on-disk) items & their sizes

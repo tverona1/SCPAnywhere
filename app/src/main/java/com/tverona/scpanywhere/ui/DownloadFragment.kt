@@ -10,9 +10,9 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.tverona.scpanywhere.R
 import com.tverona.scpanywhere.databinding.FragmentDownloaderBinding
+import com.tverona.scpanywhere.utils.StringFormatter
 import com.tverona.scpanywhere.utils.await
 import com.tverona.scpanywhere.utils.logv
-import com.tverona.scpanywhere.utils.observeOnce
 import com.tverona.scpanywhere.viewmodels.OfflineDataViewModel
 import kotlinx.coroutines.launch
 
@@ -25,7 +25,7 @@ class DownloadFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         val offlineDataViewModel: OfflineDataViewModel by activityViewModels()
 
         // Populate available storage locations
@@ -40,14 +40,14 @@ class DownloadFragment : Fragment() {
                 it.lifecycleOwner = viewLifecycleOwner
             }
 
-        offlineDataViewModel.downloadableItems.observe(viewLifecycleOwner) {
-            if (it.size == 0) {
+        offlineDataViewModel.releaseMetadata.observe(viewLifecycleOwner) {
+            if (it.isEmpty) {
                 binding.downloadButton.isEnabled = false
-                binding.noUpdates.visibility = View.VISIBLE
+                binding.downloadReleaseStatus.text = getString(R.string.download_release_status_no_updates, StringFormatter.dateFromDate(it.publishedAt))
                 binding.recyclerView.visibility = View.GONE
             } else {
                 binding.downloadButton.isEnabled = true
-                binding.noUpdates.visibility = View.GONE
+                binding.downloadReleaseStatus.text = getString(R.string.download_release_status, StringFormatter.dateFromDate(it.publishedAt))
                 binding.recyclerView.visibility = View.VISIBLE
             }
         }
@@ -66,7 +66,7 @@ class DownloadFragment : Fragment() {
                     offlineDataViewModel.cancelDownload()
                 } else {
                     viewLifecycleOwner.lifecycleScope.launch {
-                        var title: String? = null
+                        val title: String?
                         var description: String? = null
 
                         // If not enough storage left, bail

@@ -1,7 +1,6 @@
 package com.tverona.scpanywhere.downloader
 
 import androidx.databinding.ObservableBoolean
-import androidx.databinding.ObservableField
 import androidx.databinding.ObservableInt
 import androidx.databinding.ObservableLong
 import com.tverona.scpanywhere.recycleradapter.RecyclerItemComparator
@@ -15,13 +14,27 @@ class DownloadAssetMetadataObservable(val asset: DownloadAssetMetadata) : Recycl
 
     val downloadingProgress = ObservableInt(0)
     val downloadingSize = ObservableLong(0)
-    val isDownloading = ObservableField(false)
-    val shouldDownload: ObservableBoolean = object : ObservableBoolean(true) {
+    val isDownloading: ObservableBoolean = object : ObservableBoolean(false) {
         override fun set(value: Boolean) {
-            shouldDownloadClickHandler(asset)
             super.set(value)
+            enabled.set(!value)
+
+            if (!shouldDownload.get()) {
+                shouldDownload.set(value)
+            }
         }
     }
+
+    val shouldDownload: ObservableBoolean = object : ObservableBoolean(true) {
+        override fun set(value: Boolean) {
+            if (value != get()) {
+                super.set(value)
+                shouldDownloadClickHandler(asset)
+            }
+        }
+    }
+
+    val enabled = ObservableBoolean(true)
 
     fun onClick() {
         clickHandler(asset)

@@ -1,12 +1,12 @@
 package com.tverona.scpanywhere.repositories
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.tverona.scpanywhere.downloader.DownloadAssetMetadata
 import com.tverona.scpanywhere.downloader.DownloadAssetMetadataObservable
 import com.tverona.scpanywhere.downloader.LocalAssetMetadata
 import com.tverona.scpanywhere.downloader.LocalAssetMetadataObservable
 import com.tverona.scpanywhere.zipresource.ZipResourceFile
+import java.util.*
 
 data class ExternalStorageMetadata(val name: String, val path: String, val usableSpace: Long)
 
@@ -20,7 +20,9 @@ interface OfflineDataRepository {
     val currentExternalStorage: LiveData<ExternalStorageMetadata>
     val operationState: StateLiveData<String>
 
-    val downloadableItems: LiveData<List<DownloadAssetMetadataObservable>>
+    data class ReleaseMetadataObservable(var publishedAt: Date, var downloadAssetMetadata: List<DownloadAssetMetadataObservable>)
+    val releaseMetadataObservable: LiveData<ReleaseMetadataObservable>
+
     val localItems: LiveData<List<LocalAssetMetadataObservable>>
     val localItemsSize: LiveData<Long>
     val downloadSizeDelta: LiveData<Long>

@@ -148,7 +148,6 @@
     <string name="titleDeleteItem">Delete %1$s?</string>
     <string name="export_name">Name of export file</string>
     <string name="export_name_hint">Export file name</string>
-    <string name="no_updates">No updates available</string>
     <string name="reading_experience_category">Reading Experience</string>
     <string name="auto_mark_read_key">auto_mark_read_key</string>
     <string name="auto_mark_read">Auto mark as read</string>
@@ -182,4 +181,6 @@
     <string name="speechprovider_channel_name">Text-to-Speech</string>
     <string name="speechprovider_channel_description">Show Text-to-Speech notification</string>
     <string name="speechprovider_notification_title">Reading aloud \"%1$s\"</string>
+    <string name="download_release_status">Latest release: %1$s</string>
+    <string name="download_release_status_no_updates">No updates available. Latest release: %1$s</string>
 </resources>

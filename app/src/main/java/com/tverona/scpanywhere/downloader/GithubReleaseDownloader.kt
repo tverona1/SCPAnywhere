@@ -55,7 +55,7 @@ class GithubReleaseDownloader @Inject constructor(
                     val jsonRelease = response.body!!.string()
                     logv("Release: $jsonRelease")
                     val moshi =
-                        Moshi.Builder().add(Date::class.java, Rfc3339DateJsonAdapter().nullSafe())
+                        Moshi.Builder().add(Date::class.java, com.squareup.moshi.adapters.Rfc3339DateJsonAdapter().nullSafe())
                             .build()
                     val adapter: JsonAdapter<GithubRelease> =
                         moshi.adapter(GithubRelease::class.java)

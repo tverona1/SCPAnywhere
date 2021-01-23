@@ -38,6 +38,10 @@ class StringFormatter {
             return SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(time)
         }
 
+        fun dateFromDate(date: Date): String {
+            return SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(date)
+        }
+
         fun fileNameFromCurrentTime(): String {
             return SimpleDateFormat(
                 "yyyy-MM-dd_HH-mm",
