@@ -125,13 +125,13 @@ class ZipResourceFile(
             } else {
                 val entry =
                     mHashMap[assetPath]
-                if (null != entry) {
+                if (null != entry && entry.zipFile.exists()) {
                     if (entry.isUncompressed) {
                         return entry.assetFileDescriptor!!.createInputStream()
                     } else {
-                        var zf = mZipFiles[entry.zipFile]
+                        val zf = mZipFiles[entry.zipFile]
                         val zi = zf?.getEntry(assetPath)
-                        if (null != zi) return zf?.getInputStream(zi)
+                        if (null != zi) return zf.getInputStream(zi)
                     }
                 }
             }
@@ -150,8 +150,10 @@ class ZipResourceFile(
      */
     private fun getInputSteamUnindexed(assetPath: String): InputStream? {
         for (zipFile in mZipFiles) {
-            val zi = zipFile.value.getEntry(assetPath)
-            if (null != zi) return zipFile.value.getInputStream(zi)
+            if (zipFile.key.exists()) {
+                val zi = zipFile.value.getEntry(assetPath)
+                if (null != zi) return zipFile.value.getInputStream(zi)
+            }
         }
         return null
     }

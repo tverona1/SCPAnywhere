@@ -4,7 +4,6 @@ import android.webkit.WebResourceResponse
 import androidx.annotation.WorkerThread
 import androidx.webkit.WebViewAssetLoader
 import com.tverona.scpanywhere.utils.loge
-import com.tverona.scpanywhere.utils.logv
 import com.tverona.scpanywhere.utils.logw
 import com.tverona.scpanywhere.zipresource.ZipResourceFile
 import org.jsoup.Jsoup

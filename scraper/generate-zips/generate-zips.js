@@ -1,3 +1,4 @@
+const crypto = require('crypto')
 const fs = require('fs');
 const fsP = fs.promises;
 const path = require('path');
@@ -355,6 +356,41 @@ async function generateZipFiles(zipExe, outputPath, folders) {
 }
 
 /**
+ * Generates SHA256 hashes for zip file
+ * 
+ * @param {string} outputPath - path to zip files
+ */
+async function generateSHA256Hashes(outputPath) {
+	const filePath = path.join(outputPath, 'hash_sha256.json');
+	var fileHashes = {}
+
+	logger.info("Computing SHA256 hashes")
+	const zipFiles = await utils.findInDir(outputPath, new RegExp('\.zip$', 'ig'), recursive = false)
+	for (var i = 0; i < zipFiles.length; i++) {
+		const zipPath = zipFiles[i]
+		const hash = await computeFileHash(zipPath)
+		fileHashes[path.basename(zipPath)] = hash
+		logger.info(`Computed SHA256 of ${path.basename(zipPath)}: ${hash}`);
+	}
+
+	logger.info(`Saving file hashes to '${filePath}'`);
+	await fsP.writeFile(filePath, JSON.stringify(fileHashes, null, 2));
+}
+
+/**
+ * Generates hash for a file
+ * 
+ * @param {string} filePath - path to file
+ * @param {string} algorithm - hsah algorithm
+ */
+async function computeFileHash(filePath, algorithm = 'sha256') {
+	return new Promise((resolve, reject) => {
+  		const hash = crypto.createHash(algorithm);
+		fs.createReadStream(filePath).on('data', data => hash.update(data)).on('end', () => resolve(hash.digest('hex')));	
+	})
+}
+
+/**
  * Main entry point
  * 
  * @param {*} argv - args
@@ -370,6 +406,7 @@ function main(argv) {
 			const outputFolders = await processCategories(argv.input, categories);
 			await copyToOutputFolders(argv.input, argv.output, outputFolders);
 			await generateZipFiles(argv.zipExe, argv.output, outputFolders);
+			await generateSHA256Hashes(argv.output)
 			logger.info('******************* DONE *****************');
 			process.exit(0);
 		} catch (err) {

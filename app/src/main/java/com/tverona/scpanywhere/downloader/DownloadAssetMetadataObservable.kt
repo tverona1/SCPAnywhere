@@ -14,18 +14,10 @@ class DownloadAssetMetadataObservable(val asset: DownloadAssetMetadata) : Recycl
 
     val downloadingProgress = ObservableInt(0)
     val downloadingSize = ObservableLong(0)
-    val isDownloading: ObservableBoolean = object : ObservableBoolean(false) {
-        override fun set(value: Boolean) {
-            super.set(value)
-            enabled.set(!value)
-
-            if (!shouldDownload.get()) {
-                shouldDownload.set(value)
-            }
-        }
-    }
-
-    val shouldDownload: ObservableBoolean = object : ObservableBoolean(true) {
+    val isDownloading = ObservableBoolean(false)
+    val isResumable = ObservableBoolean(false)
+    val enabled: ObservableBoolean = ObservableBoolean(false)
+    val checked: ObservableBoolean = object : ObservableBoolean(true) {
         override fun set(value: Boolean) {
             if (value != get()) {
                 super.set(value)
@@ -34,7 +26,6 @@ class DownloadAssetMetadataObservable(val asset: DownloadAssetMetadata) : Recycl
         }
     }
 
-    val enabled = ObservableBoolean(true)
 
     fun onClick() {
         clickHandler(asset)

@@ -13,12 +13,20 @@ import androidx.core.app.NotificationCompat
 import androidx.hilt.Assisted
 import androidx.hilt.work.WorkerInject
 import androidx.work.*
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import com.tverona.scpanywhere.R
 import com.tverona.scpanywhere.downloader.GithubReleaseDownloader
+import com.tverona.scpanywhere.onlinedatasource.RatingsDownloader
 import com.tverona.scpanywhere.repositories.OfflineDataRepository
 import com.tverona.scpanywhere.ui.MainActivity
 import com.tverona.scpanywhere.utils.*
 import kotlinx.coroutines.*
+import okhttp3.Request
+import okio.HashingSink
+import okio.blackholeSink
+import okio.buffer
+import okio.source
 import java.io.File
 import java.io.IOException
 
@@ -46,11 +54,14 @@ class DownloadWorker @WorkerInject constructor(
         val storageDir = inputData.getString(KEY_STORAGE_DIR)
         val urls = inputData.getStringArray(KEY_URLS)
         val names = inputData.getStringArray(KEY_FILE_NAMES)
-        totalSize = inputData.getLong(KEY_TOTAL_SIZE, 0)
+        val sizes = inputData.getLongArray(KEY_FILE_SIZES)
+        val hashUrl = inputData.getString(KEY_HASH_URL)
 
-        if (storageDir == null || urls == null || names == null || urls.size != names.size) {
+        if (storageDir == null || urls == null || names == null || sizes == null || urls.size != names.size || sizes.size != urls.size) {
             return Result.failure()
         }
+
+        totalSize = sizes.sum()
         totalFiles = urls.size
 
         // Mark the Worker as important
@@ -60,9 +71,17 @@ class DownloadWorker @WorkerInject constructor(
         setForeground(ForegroundInfo(NOTIFICATION_ID, buildNotification(0, 0, 0)))
 
         return try {
-            // Clean up any temporary files
-            offlineDataRepository.cleanupTempFiles()
-            downloadAll(storageDir, urls, names)
+            // Get hash file
+            val fileSHA256Hashes: Map<String, String>
+            if (hashUrl != null) {
+                fileSHA256Hashes = githubReleaseDownloader.downloadHashAsset(hashUrl)
+            } else {
+                fileSHA256Hashes = mapOf()
+            }
+
+            // Kick off the downloads
+            downloadAll(storageDir, urls, names, sizes.toTypedArray(), fileSHA256Hashes)
+
             logv("downloadAll succeeded")
             Result.success()
         } catch (e: Exception) {
@@ -75,13 +94,13 @@ class DownloadWorker @WorkerInject constructor(
     /**
      * Download all files specified by [urls] with file name [names] to [storageDir]
      */
-    private suspend fun downloadAll(storageDir: String, urls: Array<String>, names: Array<String>) {
+    private suspend fun downloadAll(storageDir: String, urls: Array<String>, names: Array<String>, sizes: Array<Long>, fileSHA256Hashes: Map<String,String>) {
         coroutineScope {
             urls.forEachIndexed { index, url ->
                 this.launch {
                     try {
                         // Download the asset
-                        download(storageDir, url, names[index])
+                        download(storageDir, url, names[index], sizes[index], fileSHA256Hashes[names[index]])
                     } catch (e: Exception) {
                         loge(
                             "Failed to download asset: $url",
@@ -97,12 +116,11 @@ class DownloadWorker @WorkerInject constructor(
     /**
      * Download file from [url] with file name [name] to [storageDir]
      */
-    private suspend fun download(storageDir: String, url: String, name: String) =
+    private suspend fun download(storageDir: String, url: String, name: String, size: Long, sha256Hash: String?) =
         withContext(Dispatchers.IO) {
             val fileDestPath =
                 storageDir + File.separator + name
-            val fileTempPath =
-                storageDir + File.separator + name + OfflineDataRepository.tmpExt
+            val fileTempPath = GithubReleaseDownloader.getResumableFileName(storageDir, name, size)
 
             logv("Downloading $name to file $fileTempPath")
             val file = File(fileTempPath)
@@ -120,7 +138,7 @@ class DownloadWorker @WorkerInject constructor(
                 }
 
                 var lastProgressPercent = 0
-                githubReleaseDownloader.downloadReleaseAsset(url, file) { progress, total ->
+                githubReleaseDownloader.downloadReleaseAsset(url, file, resumeIfExists = true) { progress, total ->
                     if (isActive) {
                         var percent = 0
                         if (total > 0) {
@@ -141,6 +159,18 @@ class DownloadWorker @WorkerInject constructor(
                             setProgressAsync(progressData)
                         }
                     }
+                }
+
+                // Validate hash
+                if (sha256Hash != null && !validateSHA256(file, sha256Hash)) {
+                    try {
+                        file.truncateAndDelete()
+                        logv("Deleted file ${file.path}")
+                    } catch (e: Exception) {
+                        loge("Failed to delete file ${file.path}")
+                    }
+
+                    throw IOException("SHA256 hash mismatch for ${file.absolutePath}")
                 }
 
                 // Rename to final path
@@ -164,17 +194,25 @@ class DownloadWorker @WorkerInject constructor(
                     KEY_PROGRESS_IS_ERROR to true
                 )
                 setProgress(progressData)
-
-                try {
-                    file.truncateAndDelete()
-                    logv("Deleted file $fileTempPath")
-                } catch (e: Exception) {
-                    loge("Failed to delete file $fileTempPath on onStopped")
-                }
-
                 throw e
             }
         }
+
+    private fun validateSHA256(file: File, sha256Hash: String): Boolean {
+        logv("Computing SHA256 hash for file $file, expected: $sha256Hash")
+        file.source().buffer().use { source ->
+            HashingSink.sha256(blackholeSink()).use { sink ->
+                source.readAll(sink)
+                val fileSHA256 = sink.hash.hex()
+                logv("Computed SHA256 hash for file $file, hash: $fileSHA256, expected: $sha256Hash")
+                if (fileSHA256 == sha256Hash) {
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
 
     /**
      * Update notification for file name [name] with total processed bytes [fileDoneBytes] and whether it is done specified by [isDone]
@@ -229,7 +267,7 @@ class DownloadWorker @WorkerInject constructor(
             .setOnlyAlertOnce(true)
             .addAction(
                 R.drawable.baseline_clear_24,
-                context.getString(android.R.string.cancel),
+                context.getString(R.string.pause_download),
                 intent
             )
             .build()
@@ -254,7 +292,8 @@ class DownloadWorker @WorkerInject constructor(
         const val KEY_STORAGE_DIR = "KEY_STORAGE_DIR"
         const val KEY_URLS = "KEY_URLS"
         const val KEY_FILE_NAMES = "KEY_FILE_NAMES"
-        const val KEY_TOTAL_SIZE = "KEY_TOTAL_SIZE"
+        const val KEY_FILE_SIZES = "KEY_FILE_SIZES"
+        const val KEY_HASH_URL = "KEY_HASH_URL"
 
         const val KEY_PROGRESS_NAME = "KEY_PROGRESS_NAME"
         const val KEY_PROGRESS_IS_PROGRESS = "KEY_PROGRESS_IS_PROGRESS"

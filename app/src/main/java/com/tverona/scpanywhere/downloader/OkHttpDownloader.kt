@@ -1,11 +1,13 @@
 package com.tverona.scpanywhere.downloader
 
 import com.tverona.scpanywhere.utils.loge
+import com.tverona.scpanywhere.utils.logv
 import kotlinx.coroutines.*
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
 import okio.Buffer
+import okio.appendingSink
 import okio.buffer
 import okio.sink
 import java.io.File
@@ -18,7 +20,9 @@ import kotlin.coroutines.resumeWithException
 val OK_IO = newFixedThreadPoolContext(5, "OK_IO")
 
 /**
- * Invokes OkHttp Call and saves successful result to [output]
+ * Invokes OkHttp Call and saves successful result to [output].
+ * If [resumeIfExists] is specified, then download will be resumed (file appended to) rather than downloaded from scratch.
+ * Optional [bufferSize] can be specified.
  *
  * Warning: Dispatcher in [blockingDispatcher] executes blocking calls
  * [progress] callback returns downloaded bytes and total bytes, but total not always available
@@ -26,6 +30,7 @@ val OK_IO = newFixedThreadPoolContext(5, "OK_IO")
 @ExperimentalCoroutinesApi
 suspend fun Call.downloadAndSaveTo(
     output: File,
+    resumeIfExists: Boolean,
     bufferSize: Long = DEFAULT_BUFFER_SIZE.toLong(),
     blockingDispatcher: CoroutineDispatcher = OK_IO,
     progress: ((downloaded: Long, total: Long) -> Unit)? = null
@@ -43,7 +48,7 @@ suspend fun Call.downloadAndSaveTo(
 
             override fun onResponse(call: Call, response: Response) {
                 if (!response.isSuccessful) {
-                    cont.resumeWithException(IOException("Unexpected HTTP code: ${response.code}"))
+                    cont.resumeWithException(IOException("Unexpected HTTP code: ${response.code}, body: ${response.body?.string()}"))
                     response.close()
                     return
                 }
@@ -53,12 +58,13 @@ suspend fun Call.downloadAndSaveTo(
                         cont.resumeWithException(IllegalStateException("Body is null"))
                         return
                     }
-                    val contentLength = body.contentLength()
+                    val resumeLength = if (resumeIfExists) output.length() else 0L
+                    val contentLength = body.contentLength() + resumeLength
                     val buffer = Buffer()
                     var finished = false
-                    output.sink().buffer().use { out ->
+                    output.sink(append = resumeIfExists).buffer().use { out ->
                         body.source().use { source ->
-                            var totalLength = 0L
+                            var totalLength = resumeLength
                             while (cont.isActive) {
                                 val read = source.read(buffer, bufferSize)
                                 if (read == -1L) {
@@ -80,6 +86,7 @@ suspend fun Call.downloadAndSaveTo(
                         cont.resumeWithException(IOException("Download cancelled"))
                     }
                 } catch (e: Exception) {
+                    loge("Download exception for ${output.path}", e)
                     cont.resumeWithException(e)
                 } finally {
                     response.close()

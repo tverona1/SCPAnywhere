@@ -46,10 +46,11 @@ suspend fun <T> LiveData<T>.await(): T {
 }
 
 /**
- * Extension to combine two observables into one mediator - both must be fired to fire the mediator
+ * Extension to combine two observables into one mediator - both must be fired to fire the mediator unless [emitOnEitherSource] is specified
  */
 fun <T, K, R> LiveData<T>.combineWith(
     liveData: LiveData<K>,
+    emitOnEitherSource: Boolean = false,
     block: (T?, K?) -> R
 ): LiveData<R> {
     var setThis = false
@@ -60,13 +61,13 @@ fun <T, K, R> LiveData<T>.combineWith(
 
     result.addSource(this) {
         setThis = true
-        if (setOther) {
+        if (emitOnEitherSource || setOther) {
             result.value = block(this.value, liveData.value)
         }
     }
     result.addSource(liveData) {
         setOther = true
-        if (setThis) {
+        if (emitOnEitherSource || setThis) {
             result.value = block(this.value, liveData.value)
         }
     }

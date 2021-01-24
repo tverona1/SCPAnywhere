@@ -317,7 +317,7 @@ class WebViewFragment : Fragment(), View.OnClickListener {
         fragmentState = FragmentState.RESUMED
 
         currentUrlTitle.observeOnce(viewLifecycleOwner) { urlTitle ->
-            startReadTimer(urlTitle.url)
+            startReadTimer(urlTitle.url, urlTitle.title)
         }
         super.onResume()
     }
@@ -666,7 +666,7 @@ class WebViewFragment : Fragment(), View.OnClickListener {
             } cannot be found.</div>
                 </body>"""
         )
-        doc.title("404 - Page not found")
+        doc.title(getString(R.string.page_not_found))
 
         return WebResourceResponse("text/html", "UTF-8", doc.html().byteInputStream())
     }
@@ -782,7 +782,8 @@ class WebViewFragment : Fragment(), View.OnClickListener {
 
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
-                startReadTimer(url)
+
+                startReadTimer(url, view.title)
 
                 // onPageFinished callback can be called after view has already been destroyed.
                 // Check for this here.
@@ -959,7 +960,11 @@ class WebViewFragment : Fragment(), View.OnClickListener {
     /**
      * Start read timer
      */
-    private fun startReadTimer(inputUrl: String) {
+    private fun startReadTimer(inputUrl: String, title: String?) {
+        if (true == title?.equals(getString(R.string.page_not_found))) {
+            return
+        }
+
         val normalizedUrl = RegexUtils.normalizeUrl(requireContext(), inputUrl)
         if (normalizedUrl.startsWith(getString(R.string.base_path))) {
             if (autoMarkReadHelper.isReadTimeEnabled() && fragmentState != FragmentState.DESTROYED) {

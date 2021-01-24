@@ -49,7 +49,7 @@ class OfflineDataRepositoryImpl constructor(
     private val _changedStorageLocation = MutableLiveData<Unit>()
     override val changedStorageLocation = _changedStorageLocation
 
-    private val localFilesToDelete = mutableListOf<String>()
+    private val localFilesToDelete = mutableListOf<LocalAssetMetadata>()
 
     private val localMatchingItems = MutableLiveData<List<DownloadAssetMetadata>>()
 
@@ -65,8 +65,13 @@ class OfflineDataRepositoryImpl constructor(
     // Downloadable items
     private val downloadableItemsByName = HashMap<String, DownloadAssetMetadataObservable>()
 
-    private val _releaseMetadataObservable = MutableLiveData<OfflineDataRepository.ReleaseMetadataObservable>()
+    private val _releaseMetadataObservable =
+        MutableLiveData<OfflineDataRepository.ReleaseMetadataObservable>()
     override val releaseMetadataObservable = _releaseMetadataObservable
+
+    // Whether we have any resumable downloads
+    private val _hasResumableDownloads = MutableLiveData(false)
+    override val hasResumableDownloads = _hasResumableDownloads
 
     // Local (on-disk) items & their sizes
     private val _localItems = MutableLiveData<List<LocalAssetMetadataObservable>>()
@@ -93,7 +98,11 @@ class OfflineDataRepositoryImpl constructor(
     override val isDownloading = _isDownloading
 
     // Cached release metadata to avoid hitting quota
-    data class ReleaseMetadata(var publishedAt: Date, var downloadAssetMetadata: List<DownloadAssetMetadata>)
+    data class ReleaseMetadata(
+        val publishedAt: Date,
+        val downloadAssetMetadata: List<DownloadAssetMetadata>
+    )
+
     private var cachedReleaseMetadata: ReleaseMetadata? = null
 
     init {
@@ -155,16 +164,21 @@ class OfflineDataRepositoryImpl constructor(
     /**
      * Attempt to clean up any temporary files
      */
-    override suspend fun cleanupTempFiles() {
+    override suspend fun cleanupTempFiles(exclusionList: List<String>?) {
         externalStorageList.await().forEach { externalStorageMetadata ->
             val path = externalStorageMetadata.path
             val tempFiles = getFiles(path, tmpExt)
-            tempFiles.forEach {
+            tempFiles.forEach { localAssetMetadata ->
                 try {
-                    val tempFile = File(it.path)
-                    tempFile.truncateAndDelete()
+                    if (null == exclusionList || !exclusionList.contains(localAssetMetadata.path)) {
+                        logv("Deleting ${localAssetMetadata.path}")
+                        val tempFile = File(localAssetMetadata.path)
+                        tempFile.truncateAndDelete()
+                    } else {
+                        logv("Skipping delete of ${localAssetMetadata.path}")
+                    }
                 } catch (e: Exception) {
-                    loge("Error deleting file: ${it.path}", e)
+                    loge("Error deleting file: ${localAssetMetadata.path}", e)
                 }
             }
         }
@@ -175,12 +189,6 @@ class OfflineDataRepositoryImpl constructor(
      */
     override suspend fun getLocal(): Array<LocalAssetMetadata> =
         getFiles(getStorageLocation(), zipExt)
-
-    /**
-     * Returns list of local (on-disk) temp files
-     */
-    override suspend fun getLocalTemp(): Array<LocalAssetMetadata> =
-        getFiles(getStorageLocation(), tmpExt)
 
     /**
      * Loads zip files
@@ -293,12 +301,7 @@ class OfflineDataRepositoryImpl constructor(
             return
         }
 
-        val assetsToDownload = releaseMetadataObservable.value?.downloadAssetMetadata.orEmpty()
-            .filter { it.shouldDownload.get() && !it.isDownloading.get() }
-
-        if (assetsToDownload.isNotEmpty()) {
-            downloadAssetsAsync(assetsToDownload)
-        }
+        downloadAssetsAsync()
     }
 
     /**
@@ -332,7 +335,7 @@ class OfflineDataRepositoryImpl constructor(
         cancelDownload()
         cancelChangeStorage()
 
-        operationState.postUpdate("Changing storage location")
+        operationState.postUpdate(context.getString(R.string.changing_storage_location))
 
         val changeStorageData = workDataOf(
             ChangeStorageWorker.KEY_SOURCE_PATH to sourcePath,
@@ -357,40 +360,55 @@ class OfflineDataRepositoryImpl constructor(
      * Async download assets
      */
     @ExperimentalCoroutinesApi
-    private fun downloadAssetsAsync(assetsToDownload: List<DownloadAssetMetadataObservable>) = ProcessLifecycleOwner.get().lifecycle.coroutineScope.launch {
-        // Cancel any in-flight change storage operation
-        cancelChangeStorage()
+    private fun downloadAssetsAsync() =
+        ProcessLifecycleOwner.get().lifecycle.coroutineScope.launch {
+            val assetsToDownload = releaseMetadataObservable.value?.downloadAssetMetadata.orEmpty()
+                .filter { it.checked.get() && !it.isDownloading.get() }
 
-        operationState.postUpdate("Downloading ${assetsToDownload.size} items")
-
-        // Nuke any local-only files
-        deleteLocalOnlyFiles()
-
-        val downloadData = workDataOf(
-            DownloadWorker.KEY_STORAGE_DIR to currentExternalStorage.await().path,
-            DownloadWorker.KEY_URLS to assetsToDownload.map { it.asset.url }.toTypedArray(),
-            DownloadWorker.KEY_FILE_NAMES to assetsToDownload.map { it.asset.name }.toTypedArray(),
-            DownloadWorker.KEY_TOTAL_SIZE to assetsToDownload.map { it.asset.size}.sum()
-        )
-
-        val downloadRequest =
-            OneTimeWorkRequestBuilder<DownloadWorker>()
-                .setInputData(downloadData)
-                .addTag(DownloadWorker.DOWNLOAD_WORKER_TAG)
-                .build()
-
-        // Enqueue work
-        workManager.enqueueUniqueWork(
-            DownloadWorker.DOWNLOAD_WORKER_TAG,
-            ExistingWorkPolicy.KEEP,
-            downloadRequest
-        )
-
-        releaseMetadataObservable.value?.downloadAssetMetadata.orEmpty()
-            .map {
-                it.enabled.set(false)
+            if (assetsToDownload.isEmpty()) {
+                return@launch
             }
-    }
+
+            // Cancel any in-flight change storage operation
+            cancelChangeStorage()
+
+            operationState.postUpdate(context.getString(R.string.downloading_items, assetsToDownload.size))
+
+            // Nuke any local-only files
+            deleteLocalOnlyFiles()
+
+            // Delete any non-resumable temp files
+            val storageDir = currentExternalStorage.await().path
+            cleanupTempFiles(exclusionList = assetsToDownload.map { GithubReleaseDownloader.getResumableFileName(storageDir, it.asset.name, it.asset.size) })
+
+            val downloadData = workDataOf(
+                DownloadWorker.KEY_STORAGE_DIR to storageDir,
+                DownloadWorker.KEY_URLS to assetsToDownload.map { it.asset.url }.toTypedArray(),
+                DownloadWorker.KEY_FILE_NAMES to assetsToDownload.map { it.asset.name }
+                    .toTypedArray(),
+                DownloadWorker.KEY_FILE_SIZES to assetsToDownload.map { it.asset.size }
+                    .toTypedArray(),
+                DownloadWorker.KEY_HASH_URL to releaseMetadataObservable.value?.hashFileUrl
+            )
+
+            val downloadRequest =
+                OneTimeWorkRequestBuilder<DownloadWorker>()
+                    .setInputData(downloadData)
+                    .addTag(DownloadWorker.DOWNLOAD_WORKER_TAG)
+                    .build()
+
+            // Enqueue work
+            workManager.enqueueUniqueWork(
+                DownloadWorker.DOWNLOAD_WORKER_TAG,
+                ExistingWorkPolicy.KEEP,
+                downloadRequest
+            )
+
+            releaseMetadataObservable.value?.downloadAssetMetadata.orEmpty()
+                .map {
+                    it.enabled.set(false)
+                }
+        }
 
     /**
      * Delete files that exist locally but not in latest release (i.e. stale files)
@@ -398,7 +416,7 @@ class OfflineDataRepositoryImpl constructor(
     private suspend fun deleteLocalOnlyFiles() {
         withContext(Dispatchers.IO) {
             localFilesToDelete.forEach {
-                deleteFile(it)
+                deleteFile(it.path)
             }
             localFilesToDelete.clear()
         }
@@ -431,14 +449,15 @@ class OfflineDataRepositoryImpl constructor(
                             )
                         )
                     if (githubRelease?.assets != null && githubRelease.assets.isNotEmpty()) {
-                        cachedReleaseMetadata = ReleaseMetadata(githubRelease.published_at, githubRelease.assets.map {
-                            DownloadAssetMetadata(
-                                name = it.name,
-                                url = it.url,
-                                size = it.size,
-                                githubRelease.published_at
-                            )
-                        }.sortedBy { it.name })
+                        cachedReleaseMetadata =
+                            ReleaseMetadata(githubRelease.published_at, githubRelease.assets.map {
+                                DownloadAssetMetadata(
+                                    name = it.name,
+                                    url = it.url,
+                                    size = it.size,
+                                    githubRelease.published_at
+                                )
+                            }.sortedBy { it.name })
                     }
                 }
 
@@ -459,45 +478,71 @@ class OfflineDataRepositoryImpl constructor(
     private suspend fun processDownloadableAssetList(
         releaseMetadata: ReleaseMetadata
     ) = mutex.withLock {
-        val localAssets = getLocal()
-
         // Get latest on-disk assets
-        getLocalAssetsScoped()
+        val localAssets = getLocalAssetsScoped()
 
         localFilesToDelete.clear()
         logv("Process latest release: Total of ${releaseMetadata.downloadAssetMetadata.size} release assets")
 
+        var hasResumableDownloads = false
+
         val items = mutableListOf<DownloadAssetMetadataObservable>()
         val localMatches = mutableListOf<DownloadAssetMetadata>()
+
+        // Find hash file name if it exists
+        val hashFileUrl = releaseMetadata.downloadAssetMetadata.filter { it.name == context.getString(R.string.github_repo_hash_file_name) }.firstOrNull()?.url
+
+        // Pre-compute resumable files
         for (asset in releaseMetadata.downloadAssetMetadata) {
-            val localAsset = localAssets.find { it.name.equals(asset.name) }
+            if (!asset.name.endsWith(zipExt)) {
+                continue
+            }
+
+            if (File(
+                    GithubReleaseDownloader.getResumableFileName(
+                        getStorageLocation(),
+                        asset.name,
+                        asset.size
+                    )
+                ).exists()
+            ) {
+                hasResumableDownloads = true
+                break
+            }
+        }
+
+        for (asset in releaseMetadata.downloadAssetMetadata) {
+            if (!asset.name.endsWith(zipExt)) {
+                continue
+            }
+
+            val localAsset = localAssets.find { it.asset.name.equals(asset.name) }
 
             // Existing asset - check if different. We use size - that is a good enough differentiator
-            if (null != localAsset && localAsset.size == asset.size) {
+            if (null != localAsset && localAsset.asset.size == asset.size) {
                 logv("Process latest release: Existing asset matches latest: ${asset.name}, size: ${asset.size}")
                 localMatches.add(asset)
                 continue
             }
 
             withContext(Dispatchers.Main) {
-                if (downloadableItemsByName.containsKey(asset.name)) {
-                    val downloadAssetMetadata =
-                        downloadableItemsByName[asset.name]!!
+                // If we match on resumable file name, then we have a resumable download
+                var resumableFileSize = 0L
+                val resumableFile = File(
+                    GithubReleaseDownloader.getResumableFileName(
+                        getStorageLocation(),
+                        asset.name,
+                        asset.size
+                    )
+                )
+                if (resumableFile.exists()) {
+                    resumableFileSize = resumableFile.length()
+                }
+                val isResumable = resumableFileSize > 0
 
-                    downloadAssetMetadata.asset.url = asset.url
-                    downloadAssetMetadata.asset.size = asset.size
-
-                    if (!isDownloading.await()) {
-                        downloadAssetMetadata.downloadingProgress.set(0)
-                        downloadAssetMetadata.downloadingSize.set(0)
-                        downloadAssetMetadata.isDownloading.set(false)
-                        downloadAssetMetadata.shouldDownload.set(true)
-                    }
-
-                    downloadableItemsByName[asset.name]?.let { items.add(it) }
-                    logv("Process latest release: Updated downloadable item: ${asset.name}")
-                } else {
-                    val item = createDownloadAssetObservable(
+                var downloadAssetMetadata = downloadableItemsByName[asset.name]
+                if (null == downloadAssetMetadata) {
+                    downloadAssetMetadata = createDownloadAssetObservable(
                         DownloadAssetMetadata(
                             name = asset.name,
                             url = asset.url,
@@ -505,10 +550,31 @@ class OfflineDataRepositoryImpl constructor(
                             asset.publishedAt
                         )
                     )
-                    items.add(item)
-                    downloadableItemsByName[asset.name] = item
+                    downloadableItemsByName[asset.name] = downloadAssetMetadata
                     logv("Process latest release: Added downloadable item: ${asset.name}")
+                } else {
+                    logv("Process latest release: Updated downloadable item: ${asset.name}")
                 }
+
+                val isDownloading = isDownloading.await()
+                if (!isDownloading) {
+                    downloadAssetMetadata.downloadingProgress.set(((resumableFileSize.toFloat() / asset.size) * 100).toInt())
+                    downloadAssetMetadata.downloadingSize.set(resumableFileSize)
+                    downloadAssetMetadata.isDownloading.set(false)
+                    downloadAssetMetadata.isResumable.set(isResumable)
+
+                    if (hasResumableDownloads) {
+                        downloadAssetMetadata.checked.set(downloadAssetMetadata.isResumable.get())
+                    } else {
+                        downloadAssetMetadata.checked.set(true)
+                    }
+                }
+
+                downloadAssetMetadata.enabled.set(!isDownloading && !hasResumableDownloads)
+
+                logv("Downloadable asset: ${downloadAssetMetadata.asset.name}: enabled: ${downloadAssetMetadata.enabled.get()}, isDownloading, $isDownloading, isResumable: ${downloadAssetMetadata.isResumable.get()}, hasResumableDownloads: $hasResumableDownloads")
+
+                items.add(downloadAssetMetadata)
             }
         }
 
@@ -519,19 +585,26 @@ class OfflineDataRepositoryImpl constructor(
                 null == localMatches.find { it.name.equals(localAsset.asset.name) }
             ) {
                 logv("Process latest release: Local-only item: ${localAsset.asset.name}")
-                localFilesToDelete.add(localAsset.asset.path)
+                localFilesToDelete.add(localAsset.asset)
             }
         }
 
         localMatchingItems.postValue(localMatches)
-        _releaseMetadataObservable.postValue(OfflineDataRepository.ReleaseMetadataObservable(releaseMetadata.publishedAt, items))
+        _releaseMetadataObservable.postValue(
+            OfflineDataRepository.ReleaseMetadataObservable(
+                releaseMetadata.publishedAt,
+                hashFileUrl,
+                items
+            )
+        )
+        _hasResumableDownloads.postValue(hasResumableDownloads)
         computeDownloadSizeDelta()
     }
 
-    override suspend fun getLocalAssetsScoped() {
+    override suspend fun getLocalAssetsScoped(): List<LocalAssetMetadataObservable> =
         withContext(Dispatchers.IO) {
             try {
-                var localAssetsSize: Long = 0
+                var localAssetsSize = 0L
                 val localAssets = getLocal()
                     .map {
                         localAssetsSize += it.size
@@ -543,11 +616,14 @@ class OfflineDataRepositoryImpl constructor(
                 _localItems.postValue(localAssets)
 
                 computeDownloadSizeDelta()
+
+                return@withContext localAssets
             } catch (e: Exception) {
                 loge("Local items error: $e", e)
             }
+
+            return@withContext listOf()
         }
-    }
 
     /**
      * Compute if we have enough storage to download assets
@@ -557,23 +633,23 @@ class OfflineDataRepositoryImpl constructor(
             // Required space is: (1) New items to download + (2) Changed items to download - (3) Changed local items - (4) Temp files
             val storageDir = currentExternalStorage.await().path
             val usableBytes: Long = File(storageDir).usableSpace
+
             logv("Usable space on $storageDir: ${StringFormatter.fileSize(usableBytes)} ")
 
             var requiredSpace: Long = 0
             val assetsToDownload = releaseMetadataObservable.value?.downloadAssetMetadata.orEmpty()
-                .filter { it.shouldDownload.get() }
+                .filter { it.checked.get() }
+
+            // Subtract local-only items (that don't exist in the release)
+            // and also changed local items (items that are different in the release).
+            // We'll delete these files before downloading.
+            var localFilesToDeleteSize = 0L
+            localFilesToDelete.forEach { localFilesToDeleteSize += it.size }
+            requiredSpace -= localFilesToDeleteSize
 
             assetsToDownload.forEach {
-                if (null != localItems.value) {
-                    for (localItem in localItems.value!!) {
-                        if (localItem.asset.name == it.asset.name) {
-                            requiredSpace -= localItem.asset.size
-                            break
-                        }
-                    }
-                }
-
-                requiredSpace += it.asset.size
+                // Size of new item to download is asset size minus already downloaded size (to resume, if any)
+                requiredSpace += (it.asset.size - it.downloadingSize.get())
             }
 
             val remainingSpace = usableBytes - requiredSpace
@@ -614,7 +690,10 @@ class OfflineDataRepositoryImpl constructor(
                             ProcessLifecycleOwner.get().lifecycle.coroutineScope.launch(Dispatchers.Main) {
                                 // Reload download asset list
                                 downloadLatestReleaseMetadataSync()
+                                load()
                             }
+
+                            workManager.pruneWork()
                         }
 
                         WorkInfo.State.FAILED,
@@ -622,16 +701,16 @@ class OfflineDataRepositoryImpl constructor(
                             logv("Download work cancelled or failed")
                             _isDownloading.value = false
                             ProcessLifecycleOwner.get().lifecycle.coroutineScope.launch(Dispatchers.Main) {
-                                cleanupTempFiles()
-
                                 // Reload download asset list
                                 downloadLatestReleaseMetadataSync()
                                 if (workInfo.state == WorkInfo.State.FAILED) {
-                                    operationState.postUpdate("Download failed")
+                                    operationState.postUpdate(context.getString(R.string.download_failed))
                                 } else {
-                                    operationState.postUpdate("Download cancelled")
+                                    operationState.postUpdate(context.getString(R.string.download_paused))
                                 }
                             }
+
+                            workManager.pruneWork()
                         }
 
                         WorkInfo.State.RUNNING -> {
@@ -644,9 +723,18 @@ class OfflineDataRepositoryImpl constructor(
                                 workInfo.progress.getString(DownloadWorker.KEY_PROGRESS_NAME)
                             val downloadItem = downloadableItemsByName[fileName]
 
-                            val isProgress = workInfo.progress.getBoolean(DownloadWorker.KEY_PROGRESS_IS_PROGRESS, false)
-                            val isDone = workInfo.progress.getBoolean(DownloadWorker.KEY_PROGRESS_IS_DONE, false)
-                            val isError = workInfo.progress.getBoolean(DownloadWorker.KEY_PROGRESS_IS_ERROR, false)
+                            val isProgress = workInfo.progress.getBoolean(
+                                DownloadWorker.KEY_PROGRESS_IS_PROGRESS,
+                                false
+                            )
+                            val isDone = workInfo.progress.getBoolean(
+                                DownloadWorker.KEY_PROGRESS_IS_DONE,
+                                false
+                            )
+                            val isError = workInfo.progress.getBoolean(
+                                DownloadWorker.KEY_PROGRESS_IS_ERROR,
+                                false
+                            )
                             if (isDone && fileName != null) {
                                 logv("Successfully downloaded asset: $fileName")
 
@@ -655,11 +743,10 @@ class OfflineDataRepositoryImpl constructor(
                                     downloadItem?.isDownloading?.set(false)
                                     downloadItem?.downloadingSize?.set(0)
                                     downloadItem?.downloadingProgress?.set(0)
-                                    operationState.postUpdate("Downloaded $fileName")
+                                    operationState.postUpdate(context.getString(R.string.downloaded_file, fileName))
 
                                     // Reload download asset list
                                     downloadLatestReleaseMetadataSync()
-
                                     load()
                                 }
                             }
@@ -669,13 +756,7 @@ class OfflineDataRepositoryImpl constructor(
                                     "Error downloading $fileName",
                                     null
                                 )
-                                if (null != downloadItem) {
-                                    downloadItem.downloadingSize.set(0)
-                                    downloadItem.downloadingProgress.set(
-                                        0
-                                    )
-                                    downloadItem.isDownloading.set(false)
-                                }
+                                downloadItem?.isDownloading?.set(false)
                             }
                             if (isProgress && fileName != null) {
                                 if (null != downloadItem) {
@@ -703,7 +784,6 @@ class OfflineDataRepositoryImpl constructor(
                         }
                     }
                 }
-                workManager.pruneWork()
             }
     }
 
@@ -727,7 +807,7 @@ class OfflineDataRepositoryImpl constructor(
                         WorkInfo.State.SUCCEEDED -> {
                             logv("Change storage succeeded")
 
-                            operationState.postUpdate("Changed storage location")
+                            operationState.postUpdate(context.getString(R.string.changed_storage_location))
                             _changedStorageLocation.postValue(null)
                             _isChangingStorage.postValue(false)
 
@@ -737,13 +817,14 @@ class OfflineDataRepositoryImpl constructor(
                                     getLocalAssetsScoped()
                                 }
                             }
+                            workManager.pruneWork()
                         }
 
                         WorkInfo.State.FAILED,
                         WorkInfo.State.CANCELLED -> {
                             logv("Change storage cancelled or failed")
 
-                            operationState.postUpdate("Change storage cancelled or failed")
+                            operationState.postUpdate(context.getString(R.string.change_storage_cancelled_failed))
                             _isChangingStorage.postValue(false)
 
                             ProcessLifecycleOwner.get().lifecycle.coroutineScope.launch {
@@ -752,6 +833,7 @@ class OfflineDataRepositoryImpl constructor(
                                     getLocalAssetsScoped()
                                 }
                             }
+                            workManager.pruneWork()
                         }
 
                         WorkInfo.State.RUNNING -> {
@@ -774,18 +856,22 @@ class OfflineDataRepositoryImpl constructor(
                                     0
                                 )
 
-                            operationState.postUpdate(context.getString(R.string.changestorage_notification_title, currentFileName, currentFile, totalFiles))
+                            operationState.postUpdate(
+                                context.getString(
+                                    R.string.changestorage_notification_title,
+                                    currentFileName,
+                                    currentFile,
+                                    totalFiles
+                                )
+                            )
                         }
 
                         else -> {
                         }
                     }
                 }
-
-                workManager.pruneWork()
             }
     }
-
 
     private fun createLocalAssetObservable(asset: LocalAssetMetadata): LocalAssetMetadataObservable {
         return LocalAssetMetadataObservable(asset).apply {
@@ -836,7 +922,9 @@ class OfflineDataRepositoryImpl constructor(
      */
     private suspend fun loadZipFiles(assets: Array<LocalAssetMetadata>): ZipResourceFile =
         withContext(Dispatchers.IO) {
-            val zipResourceFile = ZipResourceFile(ProcessLifecycleOwner.get().lifecycle.coroutineScope, assets.map { it.path })
+            val zipResourceFile = ZipResourceFile(
+                ProcessLifecycleOwner.get().lifecycle.coroutineScope,
+                assets.map { it.path })
             return@withContext zipResourceFile
         }
 }

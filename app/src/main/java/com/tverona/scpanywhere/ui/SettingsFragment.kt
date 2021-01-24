@@ -319,7 +319,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 } else if (newPath.equals(listPreference.value, ignoreCase = true)) {
                     // No-op
                     return@launch
-                } else if (offlineDataViewModel.isDownloading.await()) {
+                } else if (offlineDataViewModel.isDownloadingOrResumable.await().first) {
                     // Downloading, ask if we should cancel
                     title = getString(R.string.titleCancelDownlading)
                     description = getString(R.string.descCancelDownloading)

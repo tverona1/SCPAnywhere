@@ -43,22 +43,40 @@ class DownloadFragment : Fragment() {
         offlineDataViewModel.releaseMetadata.observe(viewLifecycleOwner) {
             if (it.isEmpty) {
                 binding.downloadButton.isEnabled = false
-                binding.downloadReleaseStatus.text = getString(R.string.download_release_status_no_updates, StringFormatter.dateFromDate(it.publishedAt))
+                binding.downloadReleaseStatus.text = getString(
+                    R.string.download_release_status_no_updates,
+                    StringFormatter.dateFromDate(it.publishedAt)
+                )
                 binding.recyclerView.visibility = View.GONE
             } else {
                 binding.downloadButton.isEnabled = true
-                binding.downloadReleaseStatus.text = getString(R.string.download_release_status, StringFormatter.dateFromDate(it.publishedAt))
+                binding.downloadReleaseStatus.text = getString(
+                    R.string.download_release_status,
+                    StringFormatter.dateFromDate(it.publishedAt)
+                )
                 binding.recyclerView.visibility = View.VISIBLE
             }
         }
 
-        offlineDataViewModel.isDownloading.observe(viewLifecycleOwner) { isDownloading ->
+        offlineDataViewModel.isDownloadingOrResumable.observe(viewLifecycleOwner) {
+            val (isDownloading, hasResumableDownloads) = it
+
             if (isDownloading) {
                 logv("Downloading")
-                binding.downloadButton.text = getString(android.R.string.cancel)
+                binding.downloadButton.text = getString(R.string.pause_download)
+                binding.cancelResumeButton.visibility = View.GONE
+            } else if (hasResumableDownloads) {
+                logv("Not downloading, has resumable downloads")
+                binding.downloadButton.text = getString(R.string.resume)
+                binding.cancelResumeButton.visibility = View.VISIBLE
             } else {
-                logv("Not downloading")
+                logv("Not downloading, no resumable downloads")
                 binding.downloadButton.text = getString(R.string.download)
+                binding.cancelResumeButton.visibility = View.GONE
+            }
+
+            binding.cancelResumeButton.setOnClickListener {
+                offlineDataViewModel.cleanupTempFiles()
             }
 
             binding.downloadButton.setOnClickListener { view ->

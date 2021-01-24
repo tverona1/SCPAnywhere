@@ -20,7 +20,7 @@ interface OfflineDataRepository {
     val currentExternalStorage: LiveData<ExternalStorageMetadata>
     val operationState: StateLiveData<String>
 
-    data class ReleaseMetadataObservable(var publishedAt: Date, var downloadAssetMetadata: List<DownloadAssetMetadataObservable>)
+    data class ReleaseMetadataObservable(val publishedAt: Date, val hashFileUrl: String?, val downloadAssetMetadata: List<DownloadAssetMetadataObservable>)
     val releaseMetadataObservable: LiveData<ReleaseMetadataObservable>
 
     val localItems: LiveData<List<LocalAssetMetadataObservable>>
@@ -34,21 +34,21 @@ interface OfflineDataRepository {
     val onDeleteClick: LiveData<LocalAssetMetadata>
     val onLocalItemClick: LiveData<LocalAssetMetadata>
     val isChangingStorage : LiveData<Boolean>
+    val hasResumableDownloads : LiveData<Boolean>
 
     suspend fun load()
 
     suspend fun setStorageLocation(path: String)
     suspend fun getLocal(): Array<LocalAssetMetadata>
-    suspend fun getLocalTemp(): Array<LocalAssetMetadata>
     suspend fun getFiles(path: String, ext: String): Array<LocalAssetMetadata>
-    suspend fun cleanupTempFiles()
+    suspend fun cleanupTempFiles(exclusionList: List<String>? = null)
     suspend fun populateStorageEntries()
 
     fun download()
     fun cancelDownload()
     suspend fun downloadLatestReleaseMetadataSync()
     fun deleteLocalAsset(asset: LocalAssetMetadata)
-    suspend fun getLocalAssetsScoped()
+    suspend fun getLocalAssetsScoped(): List<LocalAssetMetadataObservable>
     fun cancelChangeStorage()
     suspend fun changeStorageLocation(sourcePath: String, destPath: String)
     fun clearOnDownloadableClickItem()

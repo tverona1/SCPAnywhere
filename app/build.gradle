@@ -14,8 +14,8 @@ android {
         }
     }
     def versionMajor = 1
-    def versionMinor = 2
-    def versionPatch = 3
+    def versionMinor = 3
+    def versionPatch = 0
 
     compileSdkVersion 30
     buildToolsVersion "30.0.2"
@@ -96,7 +96,7 @@ dependencies {
     implementation 'com.google.android.play:core:1.9.0'
     implementation "androidx.work:work-runtime-ktx:2.4.0"
     implementation "androidx.concurrent:concurrent-futures-ktx:1.1.0"
-    implementation "androidx.media:media:1.2.0"
+    implementation "androidx.media:media:1.2.1"
     kapt "com.google.dagger:hilt-android-compiler:2.28-alpha"
     kapt 'com.squareup.moshi:moshi-kotlin-codegen:1.10.0'
     kapt 'androidx.hilt:hilt-compiler:1.0.0-alpha02'

@@ -15,7 +15,6 @@ import com.tverona.scpanywhere.recycleradapter.RecyclerItem
 import com.tverona.scpanywhere.recycleradapter.RecyclerItemFilter
 import com.tverona.scpanywhere.repositories.*
 import com.tverona.scpanywhere.utils.*
-import com.tverona.scpanywhere.zipresource.ZipResourceFile
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -101,25 +100,29 @@ class ScpDataViewModel @ViewModelInject constructor(
     private fun getOfflineScpList(): List<UrlEntry> {
         logv("getting offline scp list")
 
-        val inputStream =
-            offlineDataRepository.zipResourceFile.value?.getInputStream(
-                context.resources.getString(
-                    R.string.scp_list_jsonfile
+        try {
+            val inputStream =
+                offlineDataRepository.zipResourceFile.value?.getInputStream(
+                    context.resources.getString(
+                        R.string.scp_list_jsonfile
+                    )
                 )
-            )
 
-        if (null != inputStream) {
-            val scpList = UrlEntry.linkEntries(JsonList.loadJsonList<UrlEntry>(inputStream))
-            // JSoup, used in online mode, unescapes certain characters. Do this here to match the behavior.
-            scpList.map {
-                it.title = it.title.replace("&amp;", "&")
-                    .replace("&quot;","\"")
-                    .replace("&#039;","'")
+            if (null != inputStream) {
+                val scpList = UrlEntry.linkEntries(JsonList.loadJsonList<UrlEntry>(inputStream))
+                // JSoup, used in online mode, unescapes certain characters. Do this here to match the behavior.
+                scpList.map {
+                    it.title = it.title.replace("&amp;", "&")
+                        .replace("&quot;", "\"")
+                        .replace("&#039;", "'")
+                }
+                return scpList
             }
-            return scpList
-        } else {
-            return listOf()
+        } catch (e: Exception) {
+            loge("Failed to get offline scp list", e)
         }
+
+        return listOf()
     }
 
     /**
@@ -128,25 +131,29 @@ class ScpDataViewModel @ViewModelInject constructor(
     private fun getOfflineTaleList(): List<UrlEntry> {
         logv("getting offline tale list")
 
-        val inputStream =
-            offlineDataRepository.zipResourceFile.value?.getInputStream(
-                context.resources.getString(
-                    R.string.tale_list_jsonfile
+        try {
+            val inputStream =
+                offlineDataRepository.zipResourceFile.value?.getInputStream(
+                    context.resources.getString(
+                        R.string.tale_list_jsonfile
+                    )
                 )
-            )
 
-        if (null != inputStream) {
-            val talesList = JsonList.loadJsonList<UrlEntry>(inputStream).sortedBy { it.title }
-            // JSoup, used in online mode, unescapes certain characters. Do this here to match the behavior.
-            talesList.map {
-                it.title = it.title.replace("&amp;", "&")
-                    .replace("&quot;","\"")
-                    .replace("&#039;","'")
+            if (null != inputStream) {
+                val talesList = JsonList.loadJsonList<UrlEntry>(inputStream).sortedBy { it.title }
+                // JSoup, used in online mode, unescapes certain characters. Do this here to match the behavior.
+                talesList.map {
+                    it.title = it.title.replace("&amp;", "&")
+                        .replace("&quot;", "\"")
+                        .replace("&#039;", "'")
+                }
+                return talesList
             }
-            return talesList
-        } else {
-            return listOf()
+        } catch (e: Exception) {
+            loge("Failed to get offline tale list", e)
         }
+
+        return listOf()
     }
 
     @JsonClass(generateAdapter = true)
@@ -160,17 +167,14 @@ class ScpDataViewModel @ViewModelInject constructor(
     private suspend fun getOfflineTalesNum(): Int {
         logv("getting offline tales num")
 
-        val inputStream =
-            offlineDataRepository.zipResourceFile.value?.getInputStream(
-                context.resources.getString(
-                    R.string.tales_jsonfile
-                )
-            )
-        if (null == inputStream) {
-            return 0
-        }
-
         try {
+            val inputStream =
+                offlineDataRepository.zipResourceFile.value?.getInputStream(
+                    context.resources.getString(
+                        R.string.tales_jsonfile
+                    )
+                ) ?: return 0
+
             val adapter = Moshi.Builder().build().adapter(TalesNum::class.java)
 
             inputStream.source().buffer().use {
@@ -179,8 +183,9 @@ class ScpDataViewModel @ViewModelInject constructor(
             }
         } catch (e: Exception) {
             loge("Error processing offline tales num", e)
-            return 0
         }
+
+        return 0
     }
 
     /**

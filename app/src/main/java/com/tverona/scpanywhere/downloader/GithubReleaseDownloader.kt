@@ -1,10 +1,8 @@
 package com.tverona.scpanywhere.downloader
 
 import android.content.Context
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonClass
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.Rfc3339DateJsonAdapter
+import com.squareup.moshi.*
+import com.tverona.scpanywhere.repositories.OfflineDataRepository
 import com.tverona.scpanywhere.utils.*
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -50,12 +48,15 @@ class GithubReleaseDownloader @Inject constructor(
 
             try {
                 client.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful) throw IOException("Unexpected code: $response")
+                    if (!response.isSuccessful) throw IOException("Unexpected code: $response message: ${response.body?.string()}")
 
                     val jsonRelease = response.body!!.string()
                     logv("Release: $jsonRelease")
                     val moshi =
-                        Moshi.Builder().add(Date::class.java, com.squareup.moshi.adapters.Rfc3339DateJsonAdapter().nullSafe())
+                        Moshi.Builder().add(
+                            Date::class.java,
+                            com.squareup.moshi.adapters.Rfc3339DateJsonAdapter().nullSafe()
+                        )
                             .build()
                     val adapter: JsonAdapter<GithubRelease> =
                         moshi.adapter(GithubRelease::class.java)
@@ -86,20 +87,29 @@ class GithubReleaseDownloader @Inject constructor(
     suspend fun downloadReleaseAsset(
         url: String,
         destFile: File,
+        resumeIfExists: Boolean = false,
         progress: ((downloaded: Long, total: Long) -> Unit)? = null
     ) = withContext(Dispatchers.IO) {
         val request = url.let {
-            Request.Builder().get()
+            val builder = Request.Builder().get()
                 .url(it)
                 .header("Accept", "application/octet-stream")
-                .build()
+            if (resumeIfExists && destFile.exists()) {
+                val range = "bytes=${destFile.length()}-"
+                builder.header("Range", range)
+                logv("Added Range header for ${destFile.name}: $range")
+            }
+            builder.build()
         }
         logv("Downloading $url to file ${destFile.absolutePath}")
 
         try {
             client.newCall(request)
-                .downloadAndSaveTo(output = destFile, progress = progress)
-
+                .downloadAndSaveTo(
+                    output = destFile,
+                    resumeIfExists = resumeIfExists,
+                    progress = progress
+                )
         } catch (e: Exception) {
             loge("Error downloading $url", e)
             if (e is IOException && e.message?.contains(
@@ -112,6 +122,64 @@ class GithubReleaseDownloader @Inject constructor(
                 throw RateLimitExceededException("Rate limited exceeded for $url")
             }
             throw e
+        }
+    }
+
+    /**
+     * Download hash files asset at [url]
+     */
+    fun downloadHashAsset(url: String): Map<String, String> {
+        logv("Getting hash file: $url")
+
+        val request = Request.Builder().get()
+            .url(url)
+            .header("Accept", "application/octet-stream")
+            .build()
+
+        try {
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) throw IOException("Unexpected code: $response message: ${response.body?.string()}")
+
+                if (response.body != null) {
+                    val moshi = Moshi.Builder().build()
+                    val mapType = Types.newParameterizedType(
+                        Map::class.java,
+                        String::class.java,
+                        String::class.java
+                    )
+                    val jsonAdapter =
+                        moshi.adapter<Map<String, String>>(mapType)
+                    val hashes = jsonAdapter.fromJson(response.body!!.source())
+                    if (hashes != null) {
+                        logv("Got ${hashes.size} hashes")
+                    }
+
+                    return hashes ?: mapOf()
+                }
+            }
+        } catch (e: Exception) {
+            loge("Error downloading $url", e)
+            if (e is IOException && e.message?.contains(
+                    "rate limit exceeded",
+                    ignoreCase = true
+                ) == true
+            ) {
+                // Emit rate limit exceeded as specific exception type
+                logw("Rate limit exceeded for asset $url")
+                throw RateLimitExceededException("Rate limited exceeded for $url")
+            }
+            throw e
+        }
+
+        return mapOf()
+    }
+
+    companion object {
+        /**
+         * Generates resumable file name that includes total file size (to distinguish from older releases)
+         */
+        fun getResumableFileName(storageDir: String, name: String, size: Long): String {
+            return storageDir + File.separator + name + "_${size}_" + OfflineDataRepository.tmpExt
         }
     }
 }

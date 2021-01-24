@@ -18,8 +18,9 @@ function getUrlRegExp(base, path) {
  * 
  * @param {string} dir - path to enumerate
  * @param {regexp} filter - filter regexp
+ * @param {boolean} recursive - whether to recurse
  */
-async function findInDir(dir, filter) {
+async function findInDir(dir, filter, recursive = false) {
 	var ret = [];
 
 	await findInDirInternal(dir, filter);
@@ -30,7 +31,7 @@ async function findInDir(dir, filter) {
 			const filePath = path.join(dir, files[i]);
 			const fileStat = fs.lstatSync(filePath);
 
-			if (fileStat.isDirectory()) {
+			if (recursive && fileStat.isDirectory()) {
 				await findInDirInternal(filePath, filter);
 		    } else if (filePath.match(filter)) {
 		    	ret.push(filePath);

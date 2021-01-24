@@ -15,6 +15,7 @@ import com.tverona.scpanywhere.recycleradapter.RecyclerItem
 import com.tverona.scpanywhere.repositories.OfflineDataRepository
 import com.tverona.scpanywhere.repositories.OfflineDataRepositoryImpl
 import com.tverona.scpanywhere.utils.StringFormatter
+import com.tverona.scpanywhere.utils.combineWith
 import com.tverona.scpanywhere.zipresource.ZipResourceFile
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
@@ -50,7 +51,7 @@ class OfflineDataViewModel @ViewModelInject constructor(
             it.map { item -> item.toRecyclerItem() }
         }
 
-    val localItemsSize: LiveData<Long> = offlineDataRepository.localItemsSize
+    val localItemsSize = offlineDataRepository.localItemsSize
 
     // Download size required
     val downloadSizeDelta = offlineDataRepository.downloadSizeDelta
@@ -69,7 +70,9 @@ class OfflineDataViewModel @ViewModelInject constructor(
 
     val changedStorageLocation = offlineDataRepository.changedStorageLocation
     val onDeleteClick = offlineDataRepository.onDeleteClick
-    val isDownloading = offlineDataRepository.isDownloading
+    val isDownloadingOrResumable = offlineDataRepository.isDownloading.combineWith(offlineDataRepository.hasResumableDownloads, emitOnEitherSource = true) { isDownloading, hasResumableDownloads ->
+        Pair(isDownloading == true, hasResumableDownloads == true)
+    }
     val isChangingStorage = offlineDataRepository.isChangingStorage
 
     val currentExternalStorage = offlineDataRepository.currentExternalStorage
@@ -113,6 +116,13 @@ class OfflineDataViewModel @ViewModelInject constructor(
     fun getLocalAssets() {
         viewModelScope.launch {
             offlineDataRepository.getLocalAssetsScoped()
+        }
+    }
+
+    fun cleanupTempFiles() {
+        viewModelScope.launch {
+            offlineDataRepository.cleanupTempFiles()
+            offlineDataRepository.downloadLatestReleaseMetadataSync()
         }
     }
 
