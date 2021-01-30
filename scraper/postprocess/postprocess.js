@@ -304,19 +304,20 @@ async function generateRatingList(inputPath, processedContent) {
  * 
  * @param {string} inputPath - input path
  */
-async function processContent(inputPath) {
-	logger.info('Processing content');
+async function processContent(basePath) {
+	logger.info(`Processing content: ${basePath}`);
 
 	const processedContent = {}
 
-	const basePath = path.join(inputPath, config.baseDir);
 	if (!fs.existsSync(basePath)) {
 		throw new Error(`Path ${basePath} not found`);
 	}
 
 	var files = await utils.findInDir(basePath, regExpHtml);
+
+	logger.info(`files: ${files.length}`)
 	let work = files.map(async (filePath) => {
-		const indexHtmlFile = path.join(path.join(inputPath, config.baseDir), indexFile);
+		const indexHtmlFile = path.join(basePath, indexFile);
 		if (indexHtmlFile.toLocaleLowerCase() != filePath.toLocaleLowerCase()) {
 			const result = await pool.runTask({ level: logger.level, filePath: filePath }, __dirname + '/postprocess-worker-process-content.js');
 
@@ -341,7 +342,8 @@ async function postProcess(inputPath) {
 	//await generateMenu(inputPath);
 	await processTales(inputPath);
 	await processScripts(inputPath);
-	const processedContent = await processContent(inputPath);
+	const processedContent = await processContent(path.join(inputPath, config.baseDir));
+	await processContent(path.join(inputPath, path.join('scp-wiki.wdfiles.com', 'local--html')));
 	await generateTaleList(inputPath, processedContent);
 	await processSeries(inputPath, processedContent);
 	await generateRatingList(inputPath, processedContent)

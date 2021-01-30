@@ -10,6 +10,7 @@ import com.tverona.scpanywhere.downloader.GithubReleaseDownloader
 import com.tverona.scpanywhere.onlinedatasource.RatingsDownloader
 import com.tverona.scpanywhere.onlinedatasource.ScpListDownloader
 import com.tverona.scpanywhere.onlinedatasource.TaleListDownloader
+import com.tverona.scpanywhere.pathhandlers.OnlinePathHandlerJavascript
 import com.tverona.scpanywhere.repositories.OfflineDataRepository
 import com.tverona.scpanywhere.repositories.OfflineDataRepositoryImpl
 import com.tverona.scpanywhere.repositories.OfflineModeRepository
@@ -125,5 +126,13 @@ class ApplicationModule {
     @Singleton
     fun providesSpeechContent(): SpeechContent {
         return SpeechContent()
+    }
+
+    @Provides
+    @Singleton
+    fun providesOnlinePathHandlerJavascript(
+        @ApplicationContext appContext: Context
+    ): OnlinePathHandlerJavascript {
+        return OnlinePathHandlerJavascript(appContext)
     }
 }

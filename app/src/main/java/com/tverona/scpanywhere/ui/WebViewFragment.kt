@@ -61,6 +61,9 @@ class WebViewFragment : Fragment(), View.OnClickListener {
     @Inject
     lateinit var speechContent: SpeechContent
 
+    @Inject
+    lateinit var onlinePathHandlerJavascript: OnlinePathHandlerJavascript
+
     private val isSpeaking = MutableLiveData<Boolean>(false)
 
     // Listener for refresh swipe
@@ -719,6 +722,12 @@ class WebViewFragment : Fragment(), View.OnClickListener {
                 getString(R.string.base_path),
                 "/scpanywhere_inject/",
                 inMemoryPathHandler
+            )
+            .addPathHandler(
+                getString(R.string.base_path),
+                "/common--javascript/",
+                onlinePathHandlerJavascript,
+                handleFullPath = true
             )
             .addPathHandler(
                 getString(R.string.base_path),

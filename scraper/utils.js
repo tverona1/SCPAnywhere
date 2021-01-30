@@ -20,7 +20,7 @@ function getUrlRegExp(base, path) {
  * @param {regexp} filter - filter regexp
  * @param {boolean} recursive - whether to recurse
  */
-async function findInDir(dir, filter, recursive = false) {
+async function findInDir(dir, filter, recursive = true) {
 	var ret = [];
 
 	await findInDirInternal(dir, filter);

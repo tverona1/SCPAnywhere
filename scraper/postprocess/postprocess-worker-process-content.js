@@ -56,9 +56,12 @@ async function processContent($, filePath) {
     // Nuke all but these two elements
     const ondomready = $('div#dummy-ondomready-block').first()
     const maincontent = $('div#main-content').first()
-    $('body').empty()
-    $('body').prepend(ondomready)
-    $('body').prepend(maincontent)
+
+    if (maincontent.length) {
+        $('body').empty()
+        $('body').prepend(ondomready)
+        $('body').prepend(maincontent)
+    }
     return {'title' : title, 'tags' : tagNames, 'rating' : rating}
 }
 
