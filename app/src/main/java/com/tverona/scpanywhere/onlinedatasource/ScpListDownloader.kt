@@ -16,7 +16,6 @@ import javax.inject.Inject
 class ScpListDownloader @Inject constructor(
     private val context: Context
 ) {
-
     /**
      * Process a scp-series page at [url] with series number [seriesNum], returning a list of SCP entries
      */
@@ -29,6 +28,11 @@ class ScpListDownloader @Inject constructor(
         try {
             val doc = Jsoup.connect(url).timeout(20000).get()
             logv("Processing series url $url")
+
+            // Compensate for non-standard url names
+            nonStandardUrlEntries.forEach {
+                doc.select("a[href='${it.key}']")?.attr("href", it.value)
+            }
 
             doc.select("div#page-content li").forEach { elem ->
                 val a = elem.getElementsByAttributeValueMatching("href", "scp-\\d+").first()
@@ -108,5 +112,11 @@ class ScpListDownloader @Inject constructor(
         }
 
         return scpEntries
+    }
+
+    companion object {
+        val nonStandardUrlEntries = mapOf(
+            "/1231-warning" to "/scp-1231"
+        )
     }
 }

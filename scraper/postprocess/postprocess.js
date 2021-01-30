@@ -89,8 +89,16 @@ async function processLinks(scpList) {
 	scpList.sort((a, b) => a.name.localeCompare(b.name, 'en', { numeric: true }));
 
 	for (i = 0; i < scpList.length; i++) {
-		scpList[i].nextName = i + 1 < scpList.length ? scpList[i + 1].name : null;
-		scpList[i].prevName = i - 1 >= 0 ? scpList[i - 1].name : null;
+		const next = i + 1 < scpList.length ? scpList[i + 1] : null;
+		const prev = i - 1 >= 0 ? scpList[i - 1] : null;
+		if (next) {
+			scpList[i].nextName = next.name;
+			scpList[i].nextUrl = next.url;
+		}
+		if (prev) {
+			scpList[i].prevName = prev.name;
+			scpList[i].prevUrl = prev.url;
+		}
 	}
 
 	let work = scpList.map(async (entry) => {
@@ -109,6 +117,13 @@ async function processLinks(scpList) {
 async function processSeriesFile(seriesFilePath, seriesName) {
 	logger.info(`Processing file '${seriesFilePath}', series '${seriesName}`);
 
+	const nonStandardUrlNames = {
+		"/1231-warning" : "/scp-1231",
+		"/taboo" : "/scp-4000"
+	}
+
+	const nonStandardUrlRedirect = { "/scp-4000" : "/taboo" }
+
 	const body = await fsP.readFile(seriesFilePath);
 	const $ = cheerio.load(body, {
 		decodeEntities: false,
@@ -118,21 +133,39 @@ async function processSeriesFile(seriesFilePath, seriesName) {
 	const scpList = [];
 
 	$('div#page-content li').each((idx, elem) => {
-		var href = $(elem).find('a')
+		var a = $(elem).find('a');
+		var href = a.attr('href');
+		if (!href) {
+			return;
+		}
 
-		if (href.attr('href') && href.attr('href').match(/scp-\d+/)) {
-			href = href.first();
-			if (href.hasClass('newpage')) {
+		// Compensate for non-standard url names
+		for (const[key, value] of Object.entries(nonStandardUrlNames)) {
+			if (href.includes(key)) {
+				a.attr('href', href.replace(key, value));
+			}
+		}
+
+		href = a.attr('href');
+		if (href && href.match(/scp-\d+/)) {
+			a = a.first();
+			if (a.hasClass('newpage')) {
 				$(elem).remove();
 			} else {
-				const link = href.attr('href');
+				var link = href;
 				const name = link.match(/scp-\d+/g)[0];
+
+				// Compensate for redirected entries
+				for (const[key, value] of Object.entries(nonStandardUrlRedirect)) {
+					link = link.replace(key, value);
+				}
+
 				const filePath = path.join(path.dirname(seriesFilePath), link);
 				const e = $(elem).clone();
 				e.find('a').each((i2, e2) => {
 					$(e2).replaceWith($(e2).text());
 				});
-				const url = link.replace(new RegExp('^\.\.'), config.baseDir).replace('/index.html', '')
+				const url = link.replace(new RegExp('^\.\.'), config.baseDir).replace('/index.html', '');
 				const title = e.html();
 				scpList.push({ name: name, filePath: filePath, url: url, title: title, series: seriesName });
 			}
@@ -295,7 +328,7 @@ async function generateRatingList(inputPath, processedContent) {
 		}
 	}
 
-	logger.info(`Saving rating list (${ratingList.length} entries) to '${filePath}'`);
+	logger.info(`Saving rating list (${ratingList.size} entries) to '${filePath}'`);
 	await fsP.writeFile(filePath, JSON.stringify(ratingList, null, 2));
 }
 
@@ -320,7 +353,6 @@ async function processContent(basePath) {
 		const indexHtmlFile = path.join(basePath, indexFile);
 		if (indexHtmlFile.toLocaleLowerCase() != filePath.toLocaleLowerCase()) {
 			const result = await pool.runTask({ level: logger.level, filePath: filePath }, __dirname + '/postprocess-worker-process-content.js');
-
 			if (result) {
 				const url = config.baseDir + '/' + path.dirname(filePath).substring(basePath.length+1).replace(/\\/g, '/')
 				result.url = url

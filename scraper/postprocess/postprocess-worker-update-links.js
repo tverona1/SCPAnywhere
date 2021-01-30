@@ -2,6 +2,7 @@ const cheerio = require('cheerio');
 const fs = require('fs');
 const fsP = fs.promises;
 
+const config = require('../config');
 const logger = require('../logger');
 
 /**
@@ -43,14 +44,14 @@ async function updateLinks(args) {
             if ($(elem).attr('href') && $(elem).attr('href').startsWith(prefix)) {
                 var name = $(elem).attr('href').substr(prefix.length);
                 if (name.localeCompare(entry.name, 'en', { numeric: true}) < 0 && null != entry.prevName) {
-                    var path = '../' + entry.prevName + '/' + IndexFile;
+                    var path = entry.prevUrl.replace(config.baseDir, '..') + '/' + IndexFile;
                     logger.debug(`Updating ${entry.name} prev link to ${path}`);
                     $(elem).attr('href', path);
                     $(elem).text(entry.prevName.toUpperCase());
                     updated = true;
                 }
                 else if (name.localeCompare(entry.name, 'en', { numeric: true}) > 0 && null != entry.nextName) {
-                    var path = '../' + entry.nextName + '/'+ IndexFile;
+                    var path = entry.nextUrl.replace(config.baseDir, '..') + '/' + IndexFile;
                     logger.debug(`Updating ${entry.name} next link to ${path}`);
                     $(elem).text(entry.nextName.toUpperCase());
                     $(elem).attr('href', path);
