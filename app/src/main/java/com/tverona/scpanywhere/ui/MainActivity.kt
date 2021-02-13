@@ -1,6 +1,8 @@
 package com.tverona.scpanywhere.ui
 
+import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -120,7 +122,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                 // When changing offline mode, clear the backstack and re-load the launch page
                 logv("Updating offline mode to ${webDataViewModel.offlineMode.value}")
                 clearBackStack()
-                loadLaunchPage()
+                loadPage(getLastUrl())
             }
         }
 
@@ -158,7 +160,11 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
 
         // Load initial launch page, if we're not restoring a saved state (which would happen on orientation changes etc)
         if (savedInstanceState != null) {
-            loadLaunchPage()
+            var url = getIntentUrl(intent)
+            if (null == url) {
+                url = getLastUrl()
+            }
+            loadPage(url)
         }
     }
 
@@ -190,10 +196,9 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
     /**
      * Loads launch page
      */
-    private fun loadLaunchPage() {
-        val lastUrl = getLastUrl()
-        logv("Loading launch page. Last url: ${getLastUrl()}")
-        webDataViewModel.url.value = lastUrl
+    private fun loadPage(url: String) {
+        logv("Loading page $url")
+        webDataViewModel.url.value = url
     }
 
     /**
@@ -429,6 +434,26 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         val fragment =
             navHostFragment?.childFragmentManager?.fragments?.firstOrNull { it.isVisible }
         return fragment as? WebViewFragment
+    }
+
+    private fun getIntentUrl(intent: Intent?): String? {
+        if (null != intent && intent.action == Intent.ACTION_VIEW && null != intent.data?.path && intent.data?.path != "/") {
+            // Construct & normalize url
+            return RegexUtils.normalizeUrl(
+                this,
+                "${getString(R.string.base_path)}${intent.data!!.path}"
+            )
+        }
+
+        return null
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        val url = getIntentUrl(intent)
+        if (null != url) {
+            loadPage(url)
+        }
     }
 
     /**
