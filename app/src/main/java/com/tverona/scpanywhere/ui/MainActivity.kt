@@ -267,7 +267,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                     talesEntries.add(
                         JsonMenu(
                             name = "Series ${i.toRomanNumeral()} Tales",
-                            url = getString(R.string.base_path) + "/scp-series-$talesNum-tales-edition"
+                            url = getString(R.string.base_path) + "/scp-series-$i-tales-edition"
                         )
                     )
                 }

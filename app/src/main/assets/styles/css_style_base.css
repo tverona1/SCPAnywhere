@@ -1,8 +1,9 @@
 body {
     margin-left: 10px;
     margin-right: 10px;
-    background: transparent;
     word-break: break-word;
+    --gradient-header: transparent;
+    --gradient-topmenu: transparent;
 }
 
 table {

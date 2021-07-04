@@ -322,44 +322,48 @@ class ScpDataViewModel @ViewModelInject constructor(
                 val readEntries = HashMap<String, UrlEntry>()
                 val favoriteEntries = HashMap<String, UrlEntry>()
                 for (bookmark in bookmarks) {
-                    var urlEntryRecyclerItem: RecyclerItem?
-                    var urlEntryClickable: UrlEntryClickable?
-                    if (scpItemByUrl.containsKey(bookmark.url)) {
-                        urlEntryRecyclerItem =
-                            scpItemByUrl[bookmark.url]!!
-                        urlEntryClickable =
-                            urlEntryRecyclerItem.data as UrlEntryClickable
-                    } else if (taleEntriesByUrl.value?.containsKey(bookmark.url) == true) {
-                        urlEntryRecyclerItem =
-                            taleItemByUrl[bookmark.url]!!
-                        urlEntryClickable =
-                            urlEntryRecyclerItem.data as UrlEntryClickable
-                    } else {
-                        val otherEntry = UrlEntry(
-                            url = bookmark.url,
-                            title = bookmark.title,
-                            rating = null,
-                            name = null,
-                            series = null
-                        )
-                        urlEntryClickable =
-                            createListItemClickable(otherEntry)
-                        urlEntryRecyclerItem =
-                            urlEntryClickable.toRecyclerItem()
-                    }
+                    try {
+                        var urlEntryRecyclerItem: RecyclerItem?
+                        var urlEntryClickable: UrlEntryClickable?
+                        if (scpItemByUrl.containsKey(bookmark.url)) {
+                            urlEntryRecyclerItem =
+                                scpItemByUrl[bookmark.url]!!
+                            urlEntryClickable =
+                                urlEntryRecyclerItem.data as UrlEntryClickable
+                        } else if (taleEntriesByUrl.value?.containsKey(bookmark.url) == true) {
+                            urlEntryRecyclerItem =
+                                taleItemByUrl[bookmark.url]!!
+                            urlEntryClickable =
+                                urlEntryRecyclerItem.data as UrlEntryClickable
+                        } else {
+                            val otherEntry = UrlEntry(
+                                url = bookmark.url,
+                                title = bookmark.title,
+                                rating = null,
+                                name = null,
+                                series = null
+                            )
+                            urlEntryClickable =
+                                createListItemClickable(otherEntry)
+                            urlEntryRecyclerItem =
+                                urlEntryClickable.toRecyclerItem()
+                        }
 
-                    urlEntryClickable.isRead.set(bookmark.read)
-                    urlEntryClickable.isFavorite.set(bookmark.favorite)
+                        urlEntryClickable.isRead.set(bookmark.read)
+                        urlEntryClickable.isFavorite.set(bookmark.favorite)
 
-                    if (bookmark.read) {
-                        scpReadEntries.add(urlEntryRecyclerItem)
-                        readEntries[bookmark.url] =
-                            urlEntryClickable.urlEntry
-                    }
-                    if (bookmark.favorite) {
-                        scpFavoriteEntries.add(urlEntryRecyclerItem)
-                        favoriteEntries[bookmark.url] =
-                            urlEntryClickable.urlEntry
+                        if (bookmark.read) {
+                            scpReadEntries.add(urlEntryRecyclerItem)
+                            readEntries[bookmark.url] =
+                                urlEntryClickable.urlEntry
+                        }
+                        if (bookmark.favorite) {
+                            scpFavoriteEntries.add(urlEntryRecyclerItem)
+                            favoriteEntries[bookmark.url] =
+                                urlEntryClickable.urlEntry
+                        }
+                    } catch (e: Exception) {
+                        loge("Exception enumerating bookmark ${bookmark.url}", e);
                     }
                 }
 

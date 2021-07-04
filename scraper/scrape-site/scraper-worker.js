@@ -29,6 +29,7 @@ function filterByTag($, url) {
 
 // List of urls to consider as equivalent for html references
 const equivalentUrls = [
+    new RegExp(/^\/(.+)/i),
     new RegExp(/^http[s]?:\/\/scpcafe.wikidot.com\/(.+)/i),
     new RegExp(/^http[s]?:\/\/scp-wiki\.wikidot\.com\/(.+)/i),
     new RegExp(/^http[s]?:\/\/www\.scp-wiki\.wikidot\.com\/(.+)/i),
@@ -183,15 +184,6 @@ function scrapeResponse(args) {
                 $(elem).parent().remove();
             }
     });
-
-    // Replace wiki walk (prev / next). We'll replace these later.
-    var wikiwalk = $('div.footer-wikiwalk-nav div p');
-    if (wikiwalk.length > 0) {
-        wikiwalk.find('a').each((idx, elem) => {
-            if ($(elem).attr('href') && $(elem).attr('href').startsWith('/scp-'))
-                $(elem).attr('href', '#----' + $(elem).attr('href').substr(1));
-        });
-    }
 
     // Replace equivalent URLs with the base url
     $('a').each((idx, elem) => {

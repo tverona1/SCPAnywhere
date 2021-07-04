@@ -245,7 +245,15 @@ class OfflineDataRepositoryImpl constructor(
 
         val list = externalFilesDirs.map {
             var pathName: String
-            if (!Environment.isExternalStorageEmulated(it)) {
+            var isExternalStorageEmulated = false;
+
+            try {
+                isExternalStorageEmulated = Environment.isExternalStorageEmulated(it);
+            } catch (e: Exception) {
+                loge("Exception calling Environment.isExternalStorageEmulated on ${it.absolutePath}", e);
+            }
+
+            if (!isExternalStorageEmulated) {
                 pathName = context.getString(R.string.external_storage)
                 if (null == default || 0 == externalStorageNum) {
                     default = index

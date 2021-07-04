@@ -111,10 +111,11 @@ async function processLinks(scpList) {
 /**
  * Removes empty entries from scp-series pages and generates list of scp's
  * 
+ * @param {string} inputPath - input path
  * @param {string} seriesFilePath - path to series file
  * @param {string} seriesName - series name
  */
-async function processSeriesFile(seriesFilePath, seriesName) {
+async function processSeriesFile(inputPath, seriesFilePath, seriesName) {
 	logger.info(`Processing file '${seriesFilePath}', series '${seriesName}`);
 
 	const nonStandardUrlNames = {
@@ -165,7 +166,8 @@ async function processSeriesFile(seriesFilePath, seriesName) {
 				e.find('a').each((i2, e2) => {
 					$(e2).replaceWith($(e2).text());
 				});
-				const url = link.replace(new RegExp('^\.\.'), config.baseDir).replace('/index.html', '');
+
+				const url = filePath.substring(inputPath.length + path.sep.length).replace(/\\/g, '/').replace('/index.html', '');
 				const title = e.html();
 				scpList.push({ name: name, filePath: filePath, url: url, title: title, series: seriesName });
 			}
@@ -238,7 +240,7 @@ async function processSeries(inputPath, processedContent) {
 	var scpList = [];
 	for (var i = 0; i < scpDirs.length; i++) {
 		var filePath = path.join(basePath, scpDirs[i], indexFile);
-		scpList = scpList.concat(await processSeriesFile(filePath, scpDirs[i]));
+		scpList = scpList.concat(await processSeriesFile(inputPath, filePath, scpDirs[i]));
 	}
 
 	await generateScpList(inputPath, processedContent, scpList);

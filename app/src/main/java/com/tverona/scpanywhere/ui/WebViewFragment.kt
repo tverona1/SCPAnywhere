@@ -777,11 +777,15 @@ class WebViewFragment : Fragment(), View.OnClickListener {
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
 
-                logv("onPageStarted")
+                // onPageStarted callback can be called after view has already been destroyed.
+                // Check for this here.
+                if (fragmentState != FragmentState.DESTROYED) {
+                    logv("onPageStarted")
 
-                // Handle auto-mark as read on next item
-                if (null != url) {
-                    handleAutoMarkReadOnNextItem(url)
+                    // Handle auto-mark as read on next item
+                    if (null != url) {
+                        handleAutoMarkReadOnNextItem(url)
+                    }
                 }
 
                 clearTitle(getString(R.string.loading))
@@ -1093,6 +1097,10 @@ class WebViewFragment : Fragment(), View.OnClickListener {
      * Show snackbar of page title when title is clicked
      */
     override fun onClick(v: View?) {
+        if (fragmentState == FragmentState.DESTROYED) {
+            return
+        }
+
         val actionBar = (requireActivity() as AppCompatActivity).supportActionBar
         if (actionBar != null) {
             var fullTitle: String = actionBar.title.toString()
