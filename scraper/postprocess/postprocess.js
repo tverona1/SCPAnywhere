@@ -361,7 +361,7 @@ async function generateRatingList(inputPath, processedContent) {
 		}
 	}
 
-	logger.info(`Saving rating list (${ratingList.size} entries) to '${filePath}'`);
+	logger.info(`Saving rating list (${Object.keys(ratingList).length} entries) to '${filePath}'`);
 	await fsP.writeFile(filePath, JSON.stringify(ratingList, null, 2));
 }
 
