@@ -83,9 +83,12 @@ async function processScripts(inputPath) {
 /**
  * Fixes up scp prev / next links
  * 
+ * @param {string} inputPath - input path
  * @param {array} scpList - array of scp urls
  */
-async function processLinks(scpList) {
+async function processLinks(inputPath, scpList) {
+	// Process the scp list itself
+	logger.info('Processing links for scp list');
 	scpList.sort((a, b) => a.name.localeCompare(b.name, 'en', { numeric: true }));
 
 	for (i = 0; i < scpList.length; i++) {
@@ -102,7 +105,34 @@ async function processLinks(scpList) {
 	}
 
 	let work = scpList.map(async (entry) => {
-		await pool.runTask({ level: logger.level, entry: entry }, __dirname + '/postprocess-worker-update-links.js');
+		await pool.runTask({ level: logger.level, inputPath: inputPath, filePath: entry.filePath, entry: entry }, __dirname + '/postprocess-worker-update-links.js');
+	});
+
+	await Promise.all(work);
+}
+
+/**
+ * Fixes up scp prev / next links from any files that look like they belong to scp pages
+ * 
+ * @param {string} inputPath - input path
+ * @param {array} scpList - array of scp urls
+ */
+ async function processLinksHeuristically(inputPath, scpList) {
+	// Process anything else that looks like an scp page
+	logger.info('Processing links for other files');
+
+	var files = await utils.findInDir(inputPath, regExpHtml);
+	const indexHtmlFile = path.join(inputPath, indexFile);
+	let work = files.map(async (filePath) => {
+		if (indexHtmlFile.toLocaleLowerCase() != filePath.toLocaleLowerCase()) {
+			const matches = filePath.match(/(scp-\d+)/g);
+			if (matches != null && matches.length > 0) {
+				const entry = scpList.find(e => e.name.toUpperCase() === matches[0].toUpperCase());
+				if (entry != null) {
+					await pool.runTask({ level: logger.level, inputPath: inputPath, filePath: filePath, entry: entry }, __dirname + '/postprocess-worker-update-links.js');
+				}
+			}
+		}
 	});
 
 	await Promise.all(work);
@@ -244,7 +274,8 @@ async function processSeries(inputPath, processedContent) {
 	}
 
 	await generateScpList(inputPath, processedContent, scpList);
-	await processLinks(scpList);
+	await processLinks(inputPath, scpList);
+	await processLinksHeuristically(inputPath, scpList);
 }
 
 /**
